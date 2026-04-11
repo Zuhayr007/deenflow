@@ -11,6 +11,7 @@ export interface Ayah {
   number: number;
   numberInSurah: number;
   text: string;
+  transliteration: string;
   translation: string;
 }
 
