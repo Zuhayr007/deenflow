@@ -9,38 +9,81 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as QuranRouteImport } from './routes/quran'
+import { Route as DuasRouteImport } from './routes/duas'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as QuranSurahIdRouteImport } from './routes/quran.$surahId'
 
+const QuranRoute = QuranRouteImport.update({
+  id: '/quran',
+  path: '/quran',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DuasRoute = DuasRouteImport.update({
+  id: '/duas',
+  path: '/duas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuranSurahIdRoute = QuranSurahIdRouteImport.update({
+  id: '/$surahId',
+  path: '/$surahId',
+  getParentRoute: () => QuranRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/duas': typeof DuasRoute
+  '/quran': typeof QuranRouteWithChildren
+  '/quran/$surahId': typeof QuranSurahIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/duas': typeof DuasRoute
+  '/quran': typeof QuranRouteWithChildren
+  '/quran/$surahId': typeof QuranSurahIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/duas': typeof DuasRoute
+  '/quran': typeof QuranRouteWithChildren
+  '/quran/$surahId': typeof QuranSurahIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/duas' | '/quran' | '/quran/$surahId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/duas' | '/quran' | '/quran/$surahId'
+  id: '__root__' | '/' | '/duas' | '/quran' | '/quran/$surahId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DuasRoute: typeof DuasRoute
+  QuranRoute: typeof QuranRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/quran': {
+      id: '/quran'
+      path: '/quran'
+      fullPath: '/quran'
+      preLoaderRoute: typeof QuranRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/duas': {
+      id: '/duas'
+      path: '/duas'
+      fullPath: '/duas'
+      preLoaderRoute: typeof DuasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +91,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/quran/$surahId': {
+      id: '/quran/$surahId'
+      path: '/$surahId'
+      fullPath: '/quran/$surahId'
+      preLoaderRoute: typeof QuranSurahIdRouteImport
+      parentRoute: typeof QuranRoute
+    }
   }
 }
 
+interface QuranRouteChildren {
+  QuranSurahIdRoute: typeof QuranSurahIdRoute
+}
+
+const QuranRouteChildren: QuranRouteChildren = {
+  QuranSurahIdRoute: QuranSurahIdRoute,
+}
+
+const QuranRouteWithChildren = QuranRoute._addFileChildren(QuranRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DuasRoute: DuasRoute,
+  QuranRoute: QuranRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
