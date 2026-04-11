@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
-import { formatTime12h } from "@/lib/prayer-api";
+import { formatTime12h, type PrayerTimes } from "@/lib/prayer-api";
 
 interface Props {
-  times: { [key: string]: string };
+  times: PrayerTimes;
   nextPrayer: string;
 }
 
