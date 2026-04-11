@@ -109,7 +109,10 @@ function SurahReader() {
               <p className="font-arabic text-right text-xl leading-[2.4] text-foreground" dir="rtl">
                 {ayah.text}
               </p>
-              <p className="mt-3 border-t border-border pt-3 text-sm leading-relaxed text-muted-foreground">
+              <p className="mt-2 text-sm italic leading-relaxed text-foreground/70">
+                {ayah.transliteration}
+              </p>
+              <p className="mt-2 border-t border-border pt-3 text-sm leading-relaxed text-muted-foreground">
                 {ayah.translation}
               </p>
             </motion.div>

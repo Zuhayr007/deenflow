@@ -11,6 +11,7 @@ export interface Ayah {
   number: number;
   numberInSurah: number;
   text: string;
+  transliteration: string;
   translation: string;
 }
 
@@ -25,12 +26,14 @@ export async function fetchSurahs(): Promise<Surah[]> {
 }
 
 export async function fetchSurah(number: number): Promise<{ surah: Surah; ayahs: Ayah[] }> {
-  const [arabicRes, englishRes] = await Promise.all([
+  const [arabicRes, englishRes, translitRes] = await Promise.all([
     fetch(`https://api.alquran.cloud/v1/surah/${number}`),
     fetch(`https://api.alquran.cloud/v1/surah/${number}/en.asad`),
+    fetch(`https://api.alquran.cloud/v1/surah/${number}/en.transliteration`),
   ]);
   const arabicData = await arabicRes.json();
   const englishData = await englishRes.json();
+  const translitData = await translitRes.json();
 
   const surah: Surah = {
     number: arabicData.data.number,
@@ -45,6 +48,7 @@ export async function fetchSurah(number: number): Promise<{ surah: Surah; ayahs:
     number: a.number,
     numberInSurah: a.numberInSurah,
     text: a.text,
+    transliteration: translitData.data.ayahs[i]?.text || "",
     translation: englishData.data.ayahs[i]?.text || "",
   }));
 
