@@ -43,7 +43,7 @@ export default function PrayerTimesCard({ times, nextPrayer }: Props) {
               )}
             </div>
             <span className={`font-semibold tabular-nums ${isNext ? "" : "text-foreground"}`}>
-              {formatTime12h(times[prayer])}
+              {formatTime12h(times[prayer as keyof PrayerTimes])}
             </span>
           </motion.div>
         );
