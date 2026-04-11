@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { formatTime12h } from "@/lib/prayer-api";
 
 interface Props {
-  times: Record<string, string>;
+  times: { [key: string]: string };
   nextPrayer: string;
 }
 
