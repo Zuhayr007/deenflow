@@ -11,6 +11,7 @@ import PrayerTimesCard from "@/components/PrayerTimesCard";
 import CountdownTimer from "@/components/CountdownTimer";
 import { PrayerSkeleton, CountdownSkeleton } from "@/components/SkeletonLoader";
 import AppHeader from "@/components/AppHeader";
+import { DUAS } from "@/lib/duas-data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
