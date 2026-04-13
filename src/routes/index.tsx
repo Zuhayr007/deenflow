@@ -10,7 +10,7 @@ import {
 import PrayerTimesCard from "@/components/PrayerTimesCard";
 import CountdownTimer from "@/components/CountdownTimer";
 import { PrayerSkeleton, CountdownSkeleton } from "@/components/SkeletonLoader";
-import PageHeader from "@/components/PageHeader";
+import AppHeader from "@/components/AppHeader";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -47,23 +47,32 @@ function PrayerPage() {
   const today = new Date();
   const dateStr = today.toLocaleDateString("en-US", {
     weekday: "long",
-    year: "numeric",
     month: "long",
     day: "numeric",
   });
 
   return (
-    <div className="safe-bottom min-h-screen pb-4">
-      <PageHeader title="DeenFlow" subtitle={location ? `📍 ${location.city}` : "Detecting location..."} />
+    <div className="safe-bottom min-h-screen">
+      <AppHeader />
 
-      <div className="px-5 space-y-5">
-        <motion.p
+      <div className="px-5 space-y-6">
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-xs font-medium text-muted-foreground"
+          transition={{ delay: 0.2 }}
+          className="flex items-center justify-between"
         >
-          {dateStr}
-        </motion.p>
+          <div>
+            <p className="text-xs font-medium text-muted-foreground" style={{ fontFamily: 'var(--font-body)' }}>
+              {dateStr}
+            </p>
+            {location && (
+              <p className="mt-0.5 text-xs text-muted-foreground/70" style={{ fontFamily: 'var(--font-body)' }}>
+                📍 {location.city}
+              </p>
+            )}
+          </div>
+        </motion.div>
 
         {loading ? (
           <>
@@ -74,7 +83,7 @@ function PrayerPage() {
           <>
             <CountdownTimer times={times} onNextPrayerChange={handleNextPrayerChange} />
             <div>
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground" style={{ fontFamily: 'var(--font-body)' }}>
                 Today's Prayers
               </h3>
               <PrayerTimesCard times={times} nextPrayer={nextPrayer} />
@@ -85,13 +94,14 @@ function PrayerPage() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="rounded-xl border border-gold/30 bg-gold/5 p-4 text-center"
+          transition={{ delay: 0.6 }}
+          className="relative overflow-hidden rounded-2xl border border-gold/20 bg-gradient-to-br from-gold/5 to-gold/10 p-5 text-center"
         >
-          <p className="font-arabic text-lg text-foreground" dir="rtl">
+          <div className="absolute inset-0 shimmer" />
+          <p className="relative font-arabic text-xl leading-relaxed text-foreground" dir="rtl">
             بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="relative mt-2 text-xs font-medium text-muted-foreground" style={{ fontFamily: 'var(--font-body)' }}>
             In the name of Allah, the Most Gracious, the Most Merciful
           </p>
         </motion.div>
