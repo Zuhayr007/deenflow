@@ -92,20 +92,32 @@ function PrayerPage() {
           </>
         ) : null}
 
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="relative overflow-hidden rounded-2xl border border-gold/20 bg-gradient-to-br from-gold/5 to-gold/10 p-5 text-center"
-        >
-          <div className="absolute inset-0 shimmer" />
-          <p className="relative font-arabic text-xl leading-relaxed text-foreground" dir="rtl">
-            بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
-          </p>
-          <p className="relative mt-2 text-xs font-medium text-muted-foreground" style={{ fontFamily: 'var(--font-body)' }}>
-            In the name of Allah, the Most Gracious, the Most Merciful
-          </p>
-        </motion.div>
+        {(() => {
+          const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+          const dailyDua = DUAS[dayOfYear % DUAS.length];
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="relative overflow-hidden rounded-2xl border border-gold/20 bg-gradient-to-br from-gold/5 to-gold/10 p-5 text-center"
+            >
+              <div className="absolute inset-0 shimmer" />
+              <span className="relative inline-block rounded-full bg-primary/10 px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary mb-3" style={{ fontFamily: 'var(--font-body)' }}>
+                {dailyDua.category} · Daily Dua
+              </span>
+              <p className="relative font-arabic text-xl leading-relaxed text-foreground" dir="rtl">
+                {dailyDua.arabic}
+              </p>
+              <p className="relative mt-2 text-xs font-medium text-muted-foreground" style={{ fontFamily: 'var(--font-body)' }}>
+                {dailyDua.english}
+              </p>
+              <p className="relative mt-1.5 text-[10px] font-semibold text-gradient-gold inline-block" style={{ fontFamily: 'var(--font-body)' }}>
+                {dailyDua.reference}
+              </p>
+            </motion.div>
+          );
+        })()}
       </div>
     </div>
   );
