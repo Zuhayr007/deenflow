@@ -6,12 +6,12 @@ interface Props {
   nextPrayer: string;
 }
 
-const PRAYER_ICONS: Record<string, string> = {
-  Fajr: "🌅",
-  Dhuhr: "☀️",
-  Asr: "🌤️",
-  Maghrib: "🌇",
-  Isha: "🌙",
+const PRAYER_META: Record<string, { icon: string; gradient: string }> = {
+  Fajr: { icon: "🌅", gradient: "from-amber-500/10 to-orange-500/5" },
+  Dhuhr: { icon: "☀️", gradient: "from-yellow-500/10 to-amber-500/5" },
+  Asr: { icon: "🌤️", gradient: "from-sky-500/10 to-blue-500/5" },
+  Maghrib: { icon: "🌇", gradient: "from-orange-500/10 to-rose-500/5" },
+  Isha: { icon: "🌙", gradient: "from-indigo-500/10 to-purple-500/5" },
 };
 
 const PRAYERS = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"];
@@ -21,28 +21,40 @@ export default function PrayerTimesCard({ times, nextPrayer }: Props) {
     <div className="space-y-2">
       {PRAYERS.map((prayer, i) => {
         const isNext = prayer === nextPrayer;
+        const meta = PRAYER_META[prayer];
         return (
           <motion.div
             key={prayer}
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.06, duration: 0.35 }}
-            className={`flex items-center justify-between rounded-xl px-4 py-3.5 transition-all ${
+            transition={{ delay: i * 0.07, duration: 0.4, ease: "easeOut" }}
+            className={`group flex items-center justify-between rounded-2xl px-4 py-4 transition-all duration-300 ${
               isNext
-                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-                : "bg-card hover:bg-secondary"
+                ? "bg-primary text-primary-foreground shadow-lg glow-primary"
+                : "bg-card card-elevated hover:shadow-md"
             }`}
           >
-            <div className="flex items-center gap-3">
-              <span className="text-lg">{PRAYER_ICONS[prayer]}</span>
-              <span className={`font-medium ${isNext ? "" : "text-foreground"}`}>{prayer}</span>
-              {isNext && (
-                <span className="rounded-full bg-primary-foreground/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
-                  Next
+            <div className="flex items-center gap-3.5">
+              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                isNext ? "bg-white/15" : `bg-gradient-to-br ${meta.gradient}`
+              }`}>
+                <span className="text-lg">{meta.icon}</span>
+              </div>
+              <div>
+                <span className={`text-sm font-semibold ${isNext ? "" : "text-foreground"}`} style={{ fontFamily: 'var(--font-body)' }}>
+                  {prayer}
                 </span>
-              )}
+                {isNext && (
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary-foreground/60 animate-pulse" />
+                    <span className="text-[10px] font-semibold uppercase tracking-wider opacity-70">
+                      Up Next
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-            <span className={`font-semibold tabular-nums ${isNext ? "" : "text-foreground"}`}>
+            <span className={`text-base font-semibold tabular-nums ${isNext ? "" : "text-foreground"}`} style={{ fontFamily: 'var(--font-body)' }}>
               {formatTime12h(times[prayer as keyof PrayerTimes])}
             </span>
           </motion.div>

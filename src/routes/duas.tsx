@@ -3,7 +3,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DUAS, DUA_CATEGORIES } from "@/lib/duas-data";
 import DuaCard from "@/components/DuaCard";
-import PageHeader from "@/components/PageHeader";
+import AppHeader from "@/components/AppHeader";
 
 export const Route = createFileRoute("/duas")({
   head: () => ({
@@ -24,18 +24,26 @@ function DuasPage() {
 
   return (
     <div className="safe-bottom min-h-screen">
-      <PageHeader title="Duas" subtitle="Supplications for every occasion" />
+      <AppHeader />
 
-      <div className="flex gap-2 overflow-x-auto px-5 pb-1 scrollbar-none">
+      <div className="px-5 pb-2">
+        <h2 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-display)' }}>Duas</h2>
+        <p className="mt-0.5 text-sm text-muted-foreground" style={{ fontFamily: 'var(--font-body)' }}>
+          Supplications for every occasion
+        </p>
+      </div>
+
+      <div className="flex gap-2 overflow-x-auto px-5 pb-1 pt-2 scrollbar-none">
         {DUA_CATEGORIES.map((cat) => (
           <button
             key={cat}
             onClick={() => setActive(cat)}
-            className={`shrink-0 rounded-full px-4 py-2 text-xs font-medium transition-all ${
+            className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 ${
               active === cat
-                ? "bg-primary text-primary-foreground shadow-md"
-                : "bg-secondary text-secondary-foreground hover:bg-accent"
+                ? "bg-primary text-primary-foreground shadow-md glow-primary"
+                : "bg-card card-elevated text-muted-foreground hover:text-foreground"
             }`}
+            style={{ fontFamily: 'var(--font-body)' }}
           >
             {cat}
           </button>
