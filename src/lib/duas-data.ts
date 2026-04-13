@@ -69,7 +69,7 @@ export const DUAS: Dua[] = [
     category: "Deceased",
     arabic: "اللَّهُمَّ اغْفِرْ لَهُ وَارْحَمْهُ وَعَافِهِ وَاعْفُ عَنْهُ وَأَكْرِمْ نُزُلَهُ وَوَسِّعْ مُدْخَلَهُ",
     english: "O Allah, forgive him, have mercy on him, keep him safe, pardon him, honour his reception, and make his entrance spacious.",
-    reference: "Muslim",
+    reference: "Ibn Majah",
   },
   {
     id: 9,

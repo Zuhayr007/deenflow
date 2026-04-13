@@ -55,7 +55,6 @@
   --font-body: var(--font-family-body);
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
   --radius: 0.75rem;
@@ -229,7 +228,7 @@
 /* Custom scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: oklch(0.4 0.08 175 / 0.4) transparent;
+  scrollbar-color: oklch(57.399% 0.10927 173.583 / 0.496) transparent;
 }
 
 *::-webkit-scrollbar {

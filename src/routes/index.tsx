@@ -16,10 +16,11 @@ import { DUAS } from "@/lib/duas-data";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "DeenFlow — Prayer Times & Islamic Companion" },
+      { title: "DeenFlow | Islamic Companion" },
       { name: "description", content: "Your daily Islamic companion with prayer times, Quran, and duas." },
-      { property: "og:title", content: "DeenFlow — Prayer Times & Islamic Companion" },
+      { property: "og:title", content: "DeenFlow | Islamic Companion" },
       { property: "og:description", content: "Your daily Islamic companion with prayer times, Quran, and duas." },
+      { property: "og:image", content: "/og-image.png" },
     ],
   }),
   component: PrayerPage,
@@ -100,11 +101,11 @@ function PrayerPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="relative overflow-hidden rounded-2xl border border-gold/20 bg-gradient-to-br from-gold/5 to-gold/10 p-5 text-center"
+              className="relative overflow-hidden rounded-2xl border border-gold/20 bg-linear-to-br from-gold/5 to-gold/10 p-5 text-center"
             >
               <div className="absolute inset-0 shimmer" />
               <span className="relative inline-block rounded-full bg-primary/10 px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary mb-3" style={{ fontFamily: 'var(--font-body)' }}>
-                {dailyDua.category} · Daily Dua
+                Daily Dua · {dailyDua.category}
               </span>
               <p className="relative font-arabic text-xl leading-relaxed text-foreground" dir="rtl">
                 {dailyDua.arabic}
