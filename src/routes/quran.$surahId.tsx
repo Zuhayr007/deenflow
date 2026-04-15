@@ -20,6 +20,7 @@ function SurahReader() {
   const [ayahs, setAyahs] = useState<Ayah[]>([]);
   const [bookmarks, setBookmarks] = useState<number[]>(getBookmarks());
   const [loading, setLoading] = useState(true);
+  const [highlightedAyah, setHighlightedAyah] = useState<number>(1);
 
   useEffect(() => {
     setLoading(true);
