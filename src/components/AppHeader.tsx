@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import logo from "@/assets/logo.png";
+import SettingsSheet from "@/components/SettingsSheet";
 
 export default function AppHeader() {
   return (
@@ -16,15 +17,17 @@ export default function AppHeader() {
         </div>
         <div>
           <h1 className="text-xl font-bold tracking-tight text-foreground" style={{ fontFamily: 'var(--font-display)' }}>
-            Deen<span className="text-green-700">Flow</span>
+            Deen<span className="text-green-700 dark:text-primary">Flow</span>
           </h1>
         </div>
       </div>
-      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary">
-        <svg viewBox="0 0 24 24" className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" />
-        </svg>
-      </div>
+      <SettingsSheet>
+        <button className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary transition-colors hover:bg-accent active:scale-95">
+          <svg viewBox="0 0 24 24" className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" />
+          </svg>
+        </button>
+      </SettingsSheet>
     </motion.header>
   );
 }

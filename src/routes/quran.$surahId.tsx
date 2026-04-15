@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { fetchSurah, toggleBookmark, getBookmarks, setLastRead, type Ayah, type Surah } from "@/lib/quran-api";
+import QuranAudioPlayer from "@/components/QuranAudioPlayer";
 
 export const Route = createFileRoute("/quran/$surahId")({
   head: () => ({
@@ -19,6 +20,7 @@ function SurahReader() {
   const [ayahs, setAyahs] = useState<Ayah[]>([]);
   const [bookmarks, setBookmarks] = useState<number[]>(getBookmarks());
   const [loading, setLoading] = useState(true);
+  const [highlightedAyah, setHighlightedAyah] = useState<number>(1);
 
   useEffect(() => {
     setLoading(true);
@@ -93,16 +95,18 @@ function SurahReader() {
         </div>
       )}
 
-      <div className="mt-6 space-y-3 px-5">
+      <div className="mt-6 space-y-3 px-5 pb-32">
         {ayahs.map((ayah, i) => {
           const isBookmarked = bookmarks.includes(ayah.number);
+          const isHighlighted = ayah.numberInSurah === highlightedAyah;
           return (
             <motion.div
               key={ayah.number}
+              id={`ayah-${ayah.numberInSurah}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: Math.min(i * 0.03, 1) }}
-              className="rounded-2xl bg-card p-5 card-elevated"
+              className={`rounded-2xl bg-card p-5 card-elevated transition-all duration-300 ${isHighlighted ? "ring-2 ring-primary/50 bg-primary/5" : ""}`}
             >
               <div className="mb-3 flex items-center justify-between">
                 <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/8 text-xs font-bold text-primary" style={{ fontFamily: 'var(--font-body)' }}>
@@ -129,6 +133,19 @@ function SurahReader() {
           );
         })}
       </div>
+
+      {surah && (
+        <QuranAudioPlayer
+          surahNumber={Number(surahId)}
+          surahName={surah.englishName}
+          totalAyahs={surah.numberOfAyahs}
+          currentAyah={highlightedAyah}
+          onAyahChange={(ayah) => {
+            setHighlightedAyah(ayah);
+            document.getElementById(`ayah-${ayah}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }}
+        />
+      )}
     </div>
   );
 }
