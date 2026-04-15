@@ -27,6 +27,7 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
+  useTheme(); // Initialize theme on mount
   return (
     <div className="mx-auto max-w-lg">
       <Outlet />
