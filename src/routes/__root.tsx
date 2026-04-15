@@ -1,5 +1,6 @@
 import { Outlet, Link, createRootRoute } from "@tanstack/react-router";
 import BottomNav from "@/components/BottomNav";
+import { useTheme } from "@/hooks/use-theme";
 
 function NotFoundComponent() {
   return (
