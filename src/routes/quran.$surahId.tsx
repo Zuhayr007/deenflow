@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { fetchSurah, toggleBookmark, getBookmarks, setLastRead, type Ayah, type Surah } from "@/lib/quran-api";
+import QuranAudioPlayer from "@/components/QuranAudioPlayer";
 
 export const Route = createFileRoute("/quran/$surahId")({
   head: () => ({
