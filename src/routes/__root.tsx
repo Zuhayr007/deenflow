@@ -1,5 +1,6 @@
 import { Outlet, Link, createRootRoute } from "@tanstack/react-router";
 import BottomNav from "@/components/BottomNav";
+import { useTheme } from "@/hooks/use-theme";
 
 function NotFoundComponent() {
   return (
@@ -26,6 +27,7 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
+  useTheme(); // Initialize theme on mount
   return (
     <div className="mx-auto max-w-lg">
       <Outlet />
