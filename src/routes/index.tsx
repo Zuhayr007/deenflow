@@ -43,6 +43,8 @@ function PrayerPage() {
     })();
   }, []);
 
+  usePrayerNotifications(times);
+
   const handleNextPrayerChange = useCallback((name: string) => {
     setNextPrayer(name);
   }, []);
