@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import type { DotLottie } from "@lottiefiles/dotlottie-web";
+import type { DotLottie, EventListener } from "@lottiefiles/dotlottie-web";
 
 export function AppLoader({ onComplete }: { onComplete: () => void }) {
   const [isClosing, setIsClosing] = useState(false);
@@ -10,15 +10,15 @@ export function AppLoader({ onComplete }: { onComplete: () => void }) {
     const animation = dotLottieRef.current;
     if (!animation) return;
 
-    const handleComplete = () => {
+    const handleComplete: EventListener<"complete"> = () => {
       setIsClosing(true);
       window.setTimeout(() => onComplete(), 420);
     };
 
-    animation.addEventListener?.("complete" as any, handleComplete as any);
+    animation.addEventListener("complete", handleComplete);
 
     return () => {
-      animation.removeEventListener?.("complete" as any, handleComplete as any);
+      animation.removeEventListener("complete", handleComplete);
     };
   }, [onComplete]);
 
