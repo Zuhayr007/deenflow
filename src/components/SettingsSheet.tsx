@@ -6,6 +6,9 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { useTheme } from "@/hooks/use-theme";
+import { useNotificationSettings } from "@/hooks/use-prayer-notifications";
+import { Switch } from "@/components/ui/switch";
+import { Bell, Volume2 } from "lucide-react";
 
 const themes = [
   { value: "light" as const, label: "Light", icon: "☀️" },
@@ -15,6 +18,7 @@ const themes = [
 
 export default function SettingsSheet({ children }: { children: React.ReactNode }) {
   const { theme, setTheme } = useTheme();
+  const { settings, permission, update, toggleEnabled } = useNotificationSettings();
 
   return (
     <Drawer>
