@@ -1,4 +1,85 @@
 import { DUAS, DUA_CATEGORIES, type Dua } from "./duas-data";
+
+const TRANSLITERATION_MAP: Record<string, string> = {
+  "ا": "a",
+  "أ": "a",
+  "إ": "i",
+  "آ": "aa",
+  "ب": "b",
+  "ت": "t",
+  "ث": "th",
+  "ج": "j",
+  "ح": "h",
+  "خ": "kh",
+  "د": "d",
+  "ذ": "dh",
+  "ر": "r",
+  "ز": "z",
+  "س": "s",
+  "ش": "sh",
+  "ص": "s",
+  "ض": "d",
+  "ط": "t",
+  "ظ": "z",
+  "ع": "a",
+  "غ": "gh",
+  "ف": "f",
+  "ق": "q",
+  "ك": "k",
+  "ل": "l",
+  "م": "m",
+  "ن": "n",
+  "ه": "h",
+  "و": "w",
+  "ي": "y",
+  "ى": "a",
+  "ئ": "y",
+  "ؤ": "u",
+  "ة": "ah",
+  "ء": "",
+  "ٱ": "a",
+  "ـ": "",
+};
+
+const TASHKEEL_MAP: Record<string, string> = {
+  "َ": "a",
+  "ً": "an",
+  "ُ": "u",
+  "ٌ": "un",
+  "ِ": "i",
+  "ٍ": "in",
+  "ْ": "",
+  "ّ": "",
+  "ٓ": "",
+  "ٰ": "a",
+};
+
+function transliterateArabic(text: string) {
+  const normalized = text.replace(/[\u0640\u200c\u200d]/g, "");
+  let output = "";
+
+  for (const char of normalized) {
+    if (char === "ّ") {
+      const prev = output.at(-1);
+      if (prev) output += prev;
+      continue;
+    }
+
+    if (char in TASHKEEL_MAP) {
+      const vowel = TASHKEEL_MAP[char];
+      if (vowel) output += vowel;
+      continue;
+    }
+
+    output += TRANSLITERATION_MAP[char] ?? char;
+  }
+
+  return output
+    .replace(/\s+([.,!?])/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export const categorySlug = (s: string) =>
   s
     .toLowerCase()
@@ -103,7 +184,10 @@ export function duaContent(dua: Dua) {
     title: titles[dua.id - 1] || dua.category,
     sourceUrl: q ? `https://quran.com/${q[1]}/${q[2]}` : source?.url,
     reference: source?.reference || dua.reference,
-    transliteration: source?.transliteration,
+    transliteration:
+      dua.transliteration ??
+      source?.transliteration ??
+      transliterateArabic(dua.arabic),
     excerpt: [13, 15, 20, 27, 33, 37, 42, 43, 52, 54, 56, 57].includes(dua.id),
     sourceStatus:
       q || source

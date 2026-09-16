@@ -20,8 +20,22 @@ import {
   newRecoveryKey,
   validateBackup,
 } from "../src/lib/backup";
+import { DUAS } from "../src/lib/duas-data";
+import { duaContent } from "../src/lib/dua-content";
 import { pushSchema, safePushEndpoint } from "../src/server/validation";
 import { readFile } from "node:fs/promises";
+test("dua transliterations stay readable and remove Arabic diacritics", () => {
+  const first = duaContent(DUAS[0]).transliteration;
+  const second = duaContent(DUAS[1]).transliteration;
+  const prayer = duaContent(DUAS[15]).transliteration;
+
+  assert.match(first, /rabana|zalamna/i);
+  assert.match(second, /rabbi|ghfir|tub/i);
+  assert.match(prayer, /bismi|allaahi|alaaliymu|allah/i);
+  assert.doesNotMatch(first, /[ا-ي]/);
+  assert.doesNotMatch(first, /\s{2,}/);
+});
+
 test("after Isha uses the actual next-day Fajr instant", () => {
   const schedules = ["2026-09-16", "2026-09-17"].map((date) =>
     calculateSchedule(CITIES[0], date),

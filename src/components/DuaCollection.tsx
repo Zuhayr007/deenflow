@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { DUA_CONTENT, CATEGORIES } from "@/lib/dua-content";
 import { readLocal } from "@/lib/storage";
 import DuaCard from "./DuaCard";
@@ -23,13 +24,13 @@ export default function DuaCollection({ category }: { category?: string }) {
   return (
     <>
       <nav aria-label="Dua topics" className="flex flex-wrap gap-2">
-        <a className="action secondary" href="/duas">
+        <Link className="action secondary" to="/duas">
           All duas
-        </a>
+        </Link>
         {CATEGORIES.map((c) => (
-          <a className="action secondary" key={c.slug} href={"/duas/" + c.slug}>
+          <Link className="action secondary" key={c.slug} to={"/duas/" + c.slug}>
             {c.name}
-          </a>
+          </Link>
         ))}
       </nav>
       <label className="field">

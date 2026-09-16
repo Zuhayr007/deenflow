@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { usePrayer } from "@/hooks/use-prayer";
 import { formatCountdown, formatTime12h } from "@/lib/prayer-api";
@@ -109,9 +110,9 @@ export default function RamadanTool() {
             </button>
           ))}
         </div>
-        <a href="/quran" className="text-primary">
+        <Link to="/quran" className="text-primary">
           Open Quran →
-        </a>
+        </Link>
       </section>
       {preferences.location && (
         <Timetable location={preferences.location} preferences={preferences} />

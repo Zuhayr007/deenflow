@@ -8,12 +8,20 @@ import "./styles.css";
 const router = getRouter();
 
 function AppBootstrap() {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return !sessionStorage.getItem("deenflow-app-loader-complete");
+  });
+
+  const handleLoaderComplete = () => {
+    sessionStorage.setItem("deenflow-app-loader-complete", "1");
+    setIsLoading(false);
+  };
 
   return (
     <>
       {isLoading ? (
-        <AppLoader onComplete={() => setIsLoading(false)} />
+        <AppLoader onComplete={handleLoaderComplete} />
       ) : (
         <RouterProvider router={router} />
       )}

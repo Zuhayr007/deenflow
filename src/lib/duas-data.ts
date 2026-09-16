@@ -2,6 +2,7 @@ export interface Dua {
   id: number;
   category: string;
   arabic: string;
+  transliteration?: string;
   english: string;
   reference: string;
 }

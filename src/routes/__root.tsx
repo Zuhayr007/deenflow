@@ -59,8 +59,8 @@ function RootComponent() {
         <AppStatus />
         <Outlet />
         <footer className="px-5 pt-1 pb-24 flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
-          <a href="/about">About</a>
-          <a href="/about/privacy">Privacy</a>
+          <Link to="/about">About</Link>
+          <Link to="/about/privacy">Privacy</Link>
         </footer>
         <BottomNav />
       </div>

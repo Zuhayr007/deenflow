@@ -1,4 +1,4 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import Page from "@/components/Page";
 import Timetable from "@/components/Timetable";
 import { CITIES } from "@/lib/cities";
@@ -31,16 +31,16 @@ function City() {
       intro={"Calculated salah times for " + date + " · Africa/Johannesburg"}
     >
       <nav aria-label="Breadcrumb" className="text-sm">
-        <a href="/prayer-times">South Africa</a> / {city.city}
+        <Link to="/prayer-times">South Africa</Link> / {city.city}
       </nav>
       <PrayerTimesCard times={schedule.times} nextPrayer="" />
       <p className="text-sm">
         Sunrise: {schedule.times.Sunrise}. These are calculated prayer starts,
         not congregation times. Default: North America (ISNA), standard Asr.
       </p>
-      <a className="action" href="/">
+      <Link className="action" to="/">
         Show times for my current location
-      </a>
+      </Link>
       <h2 className="text-xl font-semibold">Monthly timetable</h2>
       <Timetable location={city} />
       <h2 className="text-xl font-semibold">
@@ -51,9 +51,9 @@ function City() {
         Confirm local times with your masjid. Iqamah and Jumu'ah times are
         arranged locally and are separate from these calculated times.
       </p>
-      <a className="text-primary" href="/about/calculations">
+      <Link className="text-primary" to="/about/calculations">
         Read about calculation methods →
-      </a>
+      </Link>
     </Page>
   );
 }

@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+
 export default function LearnTool() {
   return (
     <div className="space-y-5 text-sm leading-relaxed">
@@ -29,9 +31,9 @@ export default function LearnTool() {
           Read Quran 5:6
         </a>
         <br />
-        <a className="text-primary" href="/tools/qibla">
+        <Link className="text-primary" to="/tools/qibla">
           Find the Qibla →
-        </a>
+        </Link>
       </section>
       <section className="panel space-y-3">
         <h2 className="text-xl">Learn the movements and recitation</h2>
@@ -41,12 +43,12 @@ export default function LearnTool() {
           Arabic, transliteration and recitation together. Transliteration is a
           learning aid and cannot capture every Arabic sound.
         </p>
-        <a className="action" href="/quran/1">
+        <Link className="action" to="/quran/1">
           Learn Al-Fatihah with audio
-        </a>
-        <a className="action secondary" href="/quran/112">
+        </Link>
+        <Link className="action secondary" to="/quran/112">
           Practise Al-Ikhlas
-        </a>
+        </Link>
         <p>
           The instruction to learn prayer from the Prophet's example appears in{" "}
           <a className="underline" href="https://sunnah.com/bukhari:631">

@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   Drawer,
@@ -208,9 +209,9 @@ export default function SettingsSheet({
               {message || error}
             </p>
           )}
-          <a className="action secondary" href="/tools/backup">
+          <Link className="action secondary" to="/tools/backup">
             Offline downloads & backup
-          </a>
+          </Link>
         </div>
       </DrawerContent>
     </Drawer>

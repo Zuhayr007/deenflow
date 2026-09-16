@@ -46,6 +46,16 @@ test("settings moves focus into the drawer and restores it on close", async ({
   expect(warnings).toEqual([]);
 });
 
+test("app loader only runs once per session", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByText("Deen Flow")).toBeVisible({ timeout: 15000 });
+  await page.reload();
+  await expect(page.getByText("Deen Flow")).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Today's prayer times" }),
+  ).toBeVisible();
+});
+
 test("public content and specific titles exist without JavaScript", async ({
   browser,
 }) => {

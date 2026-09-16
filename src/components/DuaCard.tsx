@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import type { Dua } from "@/lib/duas-data";
 import { duaContent } from "@/lib/dua-content";
 import { readLocal, writeLocal } from "@/lib/storage";
@@ -18,7 +19,7 @@ export default function DuaCard({ dua }: { dua: Dua; index: number }) {
   return (
     <article className="panel">
       <h2 className="text-lg font-semibold">
-        <a href={"/dua/" + d.id}>{d.title}</a>
+        <Link to={"/dua/" + d.id}>{d.title}</Link>
       </h2>
       {d.excerpt && (
         <p className="text-xs text-muted-foreground mt-1">

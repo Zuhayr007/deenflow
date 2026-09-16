@@ -1,4 +1,4 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { DUA_CONTENT } from "@/lib/dua-content";
 import { seo } from "@/lib/seo";
 import Page from "@/components/Page";
@@ -21,9 +21,9 @@ function Detail() {
   const dua = Route.useLoaderData();
   return (
     <Page title={dua.title} intro={dua.category}>
-      <a href="/duas" className="text-primary">
+      <Link to="/duas" className="text-primary">
         ← Browse all duas
-      </a>
+      </Link>
       <DuaCard dua={dua} index={0} />
     </Page>
   );

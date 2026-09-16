@@ -1,25 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import type { DotLottie, EventListener } from "@lottiefiles/dotlottie-web";
 
 export function AppLoader({ onComplete }: { onComplete: () => void }) {
   const [isClosing, setIsClosing] = useState(false);
-  const dotLottieRef = useRef<DotLottie | null>(null);
 
   useEffect(() => {
-    const animation = dotLottieRef.current;
-    if (!animation) return;
-
-    const handleComplete: EventListener<"complete"> = () => {
+    const timer = window.setTimeout(() => {
       setIsClosing(true);
       window.setTimeout(() => onComplete(), 420);
-    };
+    }, 2200);
 
-    animation.addEventListener("complete", handleComplete);
-
-    return () => {
-      animation.removeEventListener("complete", handleComplete);
-    };
+    return () => window.clearTimeout(timer);
   }, [onComplete]);
 
   return (
@@ -37,9 +28,6 @@ export function AppLoader({ onComplete }: { onComplete: () => void }) {
             speed={1}
             renderConfig={{ autoResize: true }}
             className="app-loader-animation"
-            dotLottieRefCallback={(dotLottie) => {
-              dotLottieRef.current = dotLottie;
-            }}
           />
         </div>
 

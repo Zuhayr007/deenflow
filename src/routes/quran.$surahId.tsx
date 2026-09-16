@@ -266,9 +266,9 @@ function Reader({ surah, ayahs }: Awaited<ReturnType<typeof fetchSurah>>) {
         Arabic: Uthmani edition. Translation:{" "}
         {translation === "sahih" ? "Saheeh International" : "Muhammad Asad"}.
         Text and recitation supplied by AlQuran Cloud / Islamic Network.{" "}
-        <a href="/about/sources" className="underline">
+        <Link to="/about/sources" className="underline">
           Sources
-        </a>
+        </Link>
       </p>
       <QuranAudioPlayer
         key={surah.number}
