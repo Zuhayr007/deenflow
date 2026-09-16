@@ -84,24 +84,39 @@ export function usePrayerNotifications(times: PrayerTimes | null) {
     const timers: ReturnType<typeof setTimeout>[] = [];
     const now = Date.now();
 
+    const schedule = (delay: number, title: string, body: string, tag: string) => {
+      if (delay <= 0 || delay > 24 * 60 * 60_000) return;
+      timers.push(
+        setTimeout(() => {
+          new Notification(title, {
+            body,
+            icon: "/icon-192.png",
+            badge: "/icon-192.png",
+            tag,
+            silent: !settings.sound,
+          });
+        }, delay)
+      );
+    };
+
     for (const prayer of PRAYERS) {
       const [h, m] = times[prayer].split(":").map(Number);
       const at = new Date();
       at.setHours(h, m, 0, 0);
-      const fireAt = at.getTime() - settings.minutesBefore * 60_000;
-      const delay = fireAt - now;
-      if (delay <= 0 || delay > 24 * 60 * 60_000) continue;
+      const startAt = at.getTime();
 
-      timers.push(
-        setTimeout(() => {
-          new Notification(`${prayer} in ${settings.minutesBefore} minutes`, {
-            body: `${prayer} begins at ${times[prayer]}. Time to prepare for salah.`,
-            icon: "/icon-192.png",
-            badge: "/icon-192.png",
-            tag: `deenflow-${prayer}`,
-            silent: !settings.sound,
-          });
-        }, delay)
+      schedule(
+        startAt - settings.minutesBefore * 60_000 - now,
+        `${prayer} in ${settings.minutesBefore} minutes`,
+        `${prayer} begins at ${times[prayer]}. Time to prepare for salah.`,
+        `deenflow-${prayer}-before`
+      );
+
+      schedule(
+        startAt - now,
+        `It's time for ${prayer}`,
+        `${prayer} has begun at ${times[prayer]}. Hayya 'ala-s-Salah.`,
+        `deenflow-${prayer}-start`
       );
     }
 
