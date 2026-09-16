@@ -1,0 +1,9 @@
+node_modules
+dist
+.server
+src/data
+src/routeTree.gen.ts
+package-lock.json
+bun.lockb
+test-results
+playwright-report

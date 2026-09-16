@@ -9,15 +9,42 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as QuranRouteImport } from './routes/quran'
+import { Route as PrayerTimesRouteImport } from './routes/prayer-times'
 import { Route as DuasRouteImport } from './routes/duas'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ToolsIndexRouteImport } from './routes/tools.index'
 import { Route as QuranIndexRouteImport } from './routes/quran.index'
+import { Route as PrayerTimesIndexRouteImport } from './routes/prayer-times.index'
+import { Route as DuasIndexRouteImport } from './routes/duas.index'
+import { Route as AboutIndexRouteImport } from './routes/about.index'
+import { Route as ToolsRamadanRouteImport } from './routes/tools.ramadan'
+import { Route as ToolsQiblaRouteImport } from './routes/tools.qibla'
+import { Route as ToolsMasjidRouteImport } from './routes/tools.masjid'
+import { Route as ToolsLearnRouteImport } from './routes/tools.learn'
+import { Route as ToolsBackupRouteImport } from './routes/tools.backup'
+import { Route as ToolsAdhkarRouteImport } from './routes/tools.adhkar'
 import { Route as QuranSurahIdRouteImport } from './routes/quran.$surahId'
+import { Route as DuasCategoryRouteImport } from './routes/duas.$category'
+import { Route as DuaDuaIdRouteImport } from './routes/dua.$duaId'
+import { Route as AboutTopicRouteImport } from './routes/about.$topic'
+import { Route as PrayerTimesSouthAfricaCityRouteImport } from './routes/prayer-times.south-africa.$city'
 
+const ToolsRoute = ToolsRouteImport.update({
+  id: '/tools',
+  path: '/tools',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QuranRoute = QuranRouteImport.update({
   id: '/quran',
   path: '/quran',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrayerTimesRoute = PrayerTimesRouteImport.update({
+  id: '/prayer-times',
+  path: '/prayer-times',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DuasRoute = DuasRouteImport.update({
@@ -25,64 +52,267 @@ const DuasRoute = DuasRouteImport.update({
   path: '/duas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsIndexRoute = ToolsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ToolsRoute,
 } as any)
 const QuranIndexRoute = QuranIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => QuranRoute,
 } as any)
+const PrayerTimesIndexRoute = PrayerTimesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PrayerTimesRoute,
+} as any)
+const DuasIndexRoute = DuasIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DuasRoute,
+} as any)
+const AboutIndexRoute = AboutIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AboutRoute,
+} as any)
+const ToolsRamadanRoute = ToolsRamadanRouteImport.update({
+  id: '/ramadan',
+  path: '/ramadan',
+  getParentRoute: () => ToolsRoute,
+} as any)
+const ToolsQiblaRoute = ToolsQiblaRouteImport.update({
+  id: '/qibla',
+  path: '/qibla',
+  getParentRoute: () => ToolsRoute,
+} as any)
+const ToolsMasjidRoute = ToolsMasjidRouteImport.update({
+  id: '/masjid',
+  path: '/masjid',
+  getParentRoute: () => ToolsRoute,
+} as any)
+const ToolsLearnRoute = ToolsLearnRouteImport.update({
+  id: '/learn',
+  path: '/learn',
+  getParentRoute: () => ToolsRoute,
+} as any)
+const ToolsBackupRoute = ToolsBackupRouteImport.update({
+  id: '/backup',
+  path: '/backup',
+  getParentRoute: () => ToolsRoute,
+} as any)
+const ToolsAdhkarRoute = ToolsAdhkarRouteImport.update({
+  id: '/adhkar',
+  path: '/adhkar',
+  getParentRoute: () => ToolsRoute,
+} as any)
 const QuranSurahIdRoute = QuranSurahIdRouteImport.update({
   id: '/$surahId',
   path: '/$surahId',
   getParentRoute: () => QuranRoute,
 } as any)
+const DuasCategoryRoute = DuasCategoryRouteImport.update({
+  id: '/$category',
+  path: '/$category',
+  getParentRoute: () => DuasRoute,
+} as any)
+const DuaDuaIdRoute = DuaDuaIdRouteImport.update({
+  id: '/dua/$duaId',
+  path: '/dua/$duaId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutTopicRoute = AboutTopicRouteImport.update({
+  id: '/$topic',
+  path: '/$topic',
+  getParentRoute: () => AboutRoute,
+} as any)
+const PrayerTimesSouthAfricaCityRoute =
+  PrayerTimesSouthAfricaCityRouteImport.update({
+    id: '/south-africa/$city',
+    path: '/south-africa/$city',
+    getParentRoute: () => PrayerTimesRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/duas': typeof DuasRoute
+  '/about': typeof AboutRouteWithChildren
+  '/duas': typeof DuasRouteWithChildren
+  '/prayer-times': typeof PrayerTimesRouteWithChildren
   '/quran': typeof QuranRouteWithChildren
+  '/tools': typeof ToolsRouteWithChildren
+  '/about/$topic': typeof AboutTopicRoute
+  '/dua/$duaId': typeof DuaDuaIdRoute
+  '/duas/$category': typeof DuasCategoryRoute
   '/quran/$surahId': typeof QuranSurahIdRoute
+  '/tools/adhkar': typeof ToolsAdhkarRoute
+  '/tools/backup': typeof ToolsBackupRoute
+  '/tools/learn': typeof ToolsLearnRoute
+  '/tools/masjid': typeof ToolsMasjidRoute
+  '/tools/qibla': typeof ToolsQiblaRoute
+  '/tools/ramadan': typeof ToolsRamadanRoute
+  '/about/': typeof AboutIndexRoute
+  '/duas/': typeof DuasIndexRoute
+  '/prayer-times/': typeof PrayerTimesIndexRoute
   '/quran/': typeof QuranIndexRoute
+  '/tools/': typeof ToolsIndexRoute
+  '/prayer-times/south-africa/$city': typeof PrayerTimesSouthAfricaCityRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/duas': typeof DuasRoute
+  '/about/$topic': typeof AboutTopicRoute
+  '/dua/$duaId': typeof DuaDuaIdRoute
+  '/duas/$category': typeof DuasCategoryRoute
   '/quran/$surahId': typeof QuranSurahIdRoute
+  '/tools/adhkar': typeof ToolsAdhkarRoute
+  '/tools/backup': typeof ToolsBackupRoute
+  '/tools/learn': typeof ToolsLearnRoute
+  '/tools/masjid': typeof ToolsMasjidRoute
+  '/tools/qibla': typeof ToolsQiblaRoute
+  '/tools/ramadan': typeof ToolsRamadanRoute
+  '/about': typeof AboutIndexRoute
+  '/duas': typeof DuasIndexRoute
+  '/prayer-times': typeof PrayerTimesIndexRoute
   '/quran': typeof QuranIndexRoute
+  '/tools': typeof ToolsIndexRoute
+  '/prayer-times/south-africa/$city': typeof PrayerTimesSouthAfricaCityRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/duas': typeof DuasRoute
+  '/about': typeof AboutRouteWithChildren
+  '/duas': typeof DuasRouteWithChildren
+  '/prayer-times': typeof PrayerTimesRouteWithChildren
   '/quran': typeof QuranRouteWithChildren
+  '/tools': typeof ToolsRouteWithChildren
+  '/about/$topic': typeof AboutTopicRoute
+  '/dua/$duaId': typeof DuaDuaIdRoute
+  '/duas/$category': typeof DuasCategoryRoute
   '/quran/$surahId': typeof QuranSurahIdRoute
+  '/tools/adhkar': typeof ToolsAdhkarRoute
+  '/tools/backup': typeof ToolsBackupRoute
+  '/tools/learn': typeof ToolsLearnRoute
+  '/tools/masjid': typeof ToolsMasjidRoute
+  '/tools/qibla': typeof ToolsQiblaRoute
+  '/tools/ramadan': typeof ToolsRamadanRoute
+  '/about/': typeof AboutIndexRoute
+  '/duas/': typeof DuasIndexRoute
+  '/prayer-times/': typeof PrayerTimesIndexRoute
   '/quran/': typeof QuranIndexRoute
+  '/tools/': typeof ToolsIndexRoute
+  '/prayer-times/south-africa/$city': typeof PrayerTimesSouthAfricaCityRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/duas' | '/quran' | '/quran/$surahId' | '/quran/'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/duas'
+    | '/prayer-times'
+    | '/quran'
+    | '/tools'
+    | '/about/$topic'
+    | '/dua/$duaId'
+    | '/duas/$category'
+    | '/quran/$surahId'
+    | '/tools/adhkar'
+    | '/tools/backup'
+    | '/tools/learn'
+    | '/tools/masjid'
+    | '/tools/qibla'
+    | '/tools/ramadan'
+    | '/about/'
+    | '/duas/'
+    | '/prayer-times/'
+    | '/quran/'
+    | '/tools/'
+    | '/prayer-times/south-africa/$city'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/duas' | '/quran/$surahId' | '/quran'
-  id: '__root__' | '/' | '/duas' | '/quran' | '/quran/$surahId' | '/quran/'
+  to:
+    | '/'
+    | '/about/$topic'
+    | '/dua/$duaId'
+    | '/duas/$category'
+    | '/quran/$surahId'
+    | '/tools/adhkar'
+    | '/tools/backup'
+    | '/tools/learn'
+    | '/tools/masjid'
+    | '/tools/qibla'
+    | '/tools/ramadan'
+    | '/about'
+    | '/duas'
+    | '/prayer-times'
+    | '/quran'
+    | '/tools'
+    | '/prayer-times/south-africa/$city'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/duas'
+    | '/prayer-times'
+    | '/quran'
+    | '/tools'
+    | '/about/$topic'
+    | '/dua/$duaId'
+    | '/duas/$category'
+    | '/quran/$surahId'
+    | '/tools/adhkar'
+    | '/tools/backup'
+    | '/tools/learn'
+    | '/tools/masjid'
+    | '/tools/qibla'
+    | '/tools/ramadan'
+    | '/about/'
+    | '/duas/'
+    | '/prayer-times/'
+    | '/quran/'
+    | '/tools/'
+    | '/prayer-times/south-africa/$city'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DuasRoute: typeof DuasRoute
+  AboutRoute: typeof AboutRouteWithChildren
+  DuasRoute: typeof DuasRouteWithChildren
+  PrayerTimesRoute: typeof PrayerTimesRouteWithChildren
   QuranRoute: typeof QuranRouteWithChildren
+  ToolsRoute: typeof ToolsRouteWithChildren
+  DuaDuaIdRoute: typeof DuaDuaIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tools': {
+      id: '/tools'
+      path: '/tools'
+      fullPath: '/tools'
+      preLoaderRoute: typeof ToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/quran': {
       id: '/quran'
       path: '/quran'
       fullPath: '/quran'
       preLoaderRoute: typeof QuranRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prayer-times': {
+      id: '/prayer-times'
+      path: '/prayer-times'
+      fullPath: '/prayer-times'
+      preLoaderRoute: typeof PrayerTimesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/duas': {
@@ -92,12 +322,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DuasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/tools/': {
+      id: '/tools/'
+      path: '/'
+      fullPath: '/tools/'
+      preLoaderRoute: typeof ToolsIndexRouteImport
+      parentRoute: typeof ToolsRoute
     }
     '/quran/': {
       id: '/quran/'
@@ -106,6 +350,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QuranIndexRouteImport
       parentRoute: typeof QuranRoute
     }
+    '/prayer-times/': {
+      id: '/prayer-times/'
+      path: '/'
+      fullPath: '/prayer-times/'
+      preLoaderRoute: typeof PrayerTimesIndexRouteImport
+      parentRoute: typeof PrayerTimesRoute
+    }
+    '/duas/': {
+      id: '/duas/'
+      path: '/'
+      fullPath: '/duas/'
+      preLoaderRoute: typeof DuasIndexRouteImport
+      parentRoute: typeof DuasRoute
+    }
+    '/about/': {
+      id: '/about/'
+      path: '/'
+      fullPath: '/about/'
+      preLoaderRoute: typeof AboutIndexRouteImport
+      parentRoute: typeof AboutRoute
+    }
+    '/tools/ramadan': {
+      id: '/tools/ramadan'
+      path: '/ramadan'
+      fullPath: '/tools/ramadan'
+      preLoaderRoute: typeof ToolsRamadanRouteImport
+      parentRoute: typeof ToolsRoute
+    }
+    '/tools/qibla': {
+      id: '/tools/qibla'
+      path: '/qibla'
+      fullPath: '/tools/qibla'
+      preLoaderRoute: typeof ToolsQiblaRouteImport
+      parentRoute: typeof ToolsRoute
+    }
+    '/tools/masjid': {
+      id: '/tools/masjid'
+      path: '/masjid'
+      fullPath: '/tools/masjid'
+      preLoaderRoute: typeof ToolsMasjidRouteImport
+      parentRoute: typeof ToolsRoute
+    }
+    '/tools/learn': {
+      id: '/tools/learn'
+      path: '/learn'
+      fullPath: '/tools/learn'
+      preLoaderRoute: typeof ToolsLearnRouteImport
+      parentRoute: typeof ToolsRoute
+    }
+    '/tools/backup': {
+      id: '/tools/backup'
+      path: '/backup'
+      fullPath: '/tools/backup'
+      preLoaderRoute: typeof ToolsBackupRouteImport
+      parentRoute: typeof ToolsRoute
+    }
+    '/tools/adhkar': {
+      id: '/tools/adhkar'
+      path: '/adhkar'
+      fullPath: '/tools/adhkar'
+      preLoaderRoute: typeof ToolsAdhkarRouteImport
+      parentRoute: typeof ToolsRoute
+    }
     '/quran/$surahId': {
       id: '/quran/$surahId'
       path: '/$surahId'
@@ -113,8 +420,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QuranSurahIdRouteImport
       parentRoute: typeof QuranRoute
     }
+    '/duas/$category': {
+      id: '/duas/$category'
+      path: '/$category'
+      fullPath: '/duas/$category'
+      preLoaderRoute: typeof DuasCategoryRouteImport
+      parentRoute: typeof DuasRoute
+    }
+    '/dua/$duaId': {
+      id: '/dua/$duaId'
+      path: '/dua/$duaId'
+      fullPath: '/dua/$duaId'
+      preLoaderRoute: typeof DuaDuaIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about/$topic': {
+      id: '/about/$topic'
+      path: '/$topic'
+      fullPath: '/about/$topic'
+      preLoaderRoute: typeof AboutTopicRouteImport
+      parentRoute: typeof AboutRoute
+    }
+    '/prayer-times/south-africa/$city': {
+      id: '/prayer-times/south-africa/$city'
+      path: '/south-africa/$city'
+      fullPath: '/prayer-times/south-africa/$city'
+      preLoaderRoute: typeof PrayerTimesSouthAfricaCityRouteImport
+      parentRoute: typeof PrayerTimesRoute
+    }
   }
 }
+
+interface AboutRouteChildren {
+  AboutTopicRoute: typeof AboutTopicRoute
+  AboutIndexRoute: typeof AboutIndexRoute
+}
+
+const AboutRouteChildren: AboutRouteChildren = {
+  AboutTopicRoute: AboutTopicRoute,
+  AboutIndexRoute: AboutIndexRoute,
+}
+
+const AboutRouteWithChildren = AboutRoute._addFileChildren(AboutRouteChildren)
+
+interface DuasRouteChildren {
+  DuasCategoryRoute: typeof DuasCategoryRoute
+  DuasIndexRoute: typeof DuasIndexRoute
+}
+
+const DuasRouteChildren: DuasRouteChildren = {
+  DuasCategoryRoute: DuasCategoryRoute,
+  DuasIndexRoute: DuasIndexRoute,
+}
+
+const DuasRouteWithChildren = DuasRoute._addFileChildren(DuasRouteChildren)
+
+interface PrayerTimesRouteChildren {
+  PrayerTimesIndexRoute: typeof PrayerTimesIndexRoute
+  PrayerTimesSouthAfricaCityRoute: typeof PrayerTimesSouthAfricaCityRoute
+}
+
+const PrayerTimesRouteChildren: PrayerTimesRouteChildren = {
+  PrayerTimesIndexRoute: PrayerTimesIndexRoute,
+  PrayerTimesSouthAfricaCityRoute: PrayerTimesSouthAfricaCityRoute,
+}
+
+const PrayerTimesRouteWithChildren = PrayerTimesRoute._addFileChildren(
+  PrayerTimesRouteChildren,
+)
 
 interface QuranRouteChildren {
   QuranSurahIdRoute: typeof QuranSurahIdRoute
@@ -128,10 +501,36 @@ const QuranRouteChildren: QuranRouteChildren = {
 
 const QuranRouteWithChildren = QuranRoute._addFileChildren(QuranRouteChildren)
 
+interface ToolsRouteChildren {
+  ToolsAdhkarRoute: typeof ToolsAdhkarRoute
+  ToolsBackupRoute: typeof ToolsBackupRoute
+  ToolsLearnRoute: typeof ToolsLearnRoute
+  ToolsMasjidRoute: typeof ToolsMasjidRoute
+  ToolsQiblaRoute: typeof ToolsQiblaRoute
+  ToolsRamadanRoute: typeof ToolsRamadanRoute
+  ToolsIndexRoute: typeof ToolsIndexRoute
+}
+
+const ToolsRouteChildren: ToolsRouteChildren = {
+  ToolsAdhkarRoute: ToolsAdhkarRoute,
+  ToolsBackupRoute: ToolsBackupRoute,
+  ToolsLearnRoute: ToolsLearnRoute,
+  ToolsMasjidRoute: ToolsMasjidRoute,
+  ToolsQiblaRoute: ToolsQiblaRoute,
+  ToolsRamadanRoute: ToolsRamadanRoute,
+  ToolsIndexRoute: ToolsIndexRoute,
+}
+
+const ToolsRouteWithChildren = ToolsRoute._addFileChildren(ToolsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DuasRoute: DuasRoute,
+  AboutRoute: AboutRouteWithChildren,
+  DuasRoute: DuasRouteWithChildren,
+  PrayerTimesRoute: PrayerTimesRouteWithChildren,
   QuranRoute: QuranRouteWithChildren,
+  ToolsRoute: ToolsRouteWithChildren,
+  DuaDuaIdRoute: DuaDuaIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

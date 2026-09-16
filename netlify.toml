@@ -2,7 +2,45 @@
   publish = "dist"
   command = "npm run build"
 
+[build.processing.html]
+  pretty_urls = false
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/prayer-times/south-africa/:city"
+  to = "/.netlify/functions/city?city=:city"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/*"
-  to = "/index.html"
-  status = 200
+  to = "/404.html"
+  status = 404
+
+[functions]
+  node_bundler = "esbuild"
+
+[functions.city]
+  included_files = [".server/**"]
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+    Service-Worker-Allowed = "/"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

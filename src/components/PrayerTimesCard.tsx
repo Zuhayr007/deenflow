@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { formatTime12h, type PrayerTimes } from "@/lib/prayer-api";
 
 interface Props {
@@ -23,11 +22,8 @@ export default function PrayerTimesCard({ times, nextPrayer }: Props) {
         const isNext = prayer === nextPrayer;
         const meta = PRAYER_META[prayer];
         return (
-          <motion.div
+          <div
             key={prayer}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.07, duration: 0.4, ease: "easeOut" }}
             className={`group flex items-center justify-between rounded-2xl px-4 py-4 transition-all duration-300 ${
               isNext
                 ? "bg-primary text-primary-foreground shadow-lg glow-primary"
@@ -35,13 +31,18 @@ export default function PrayerTimesCard({ times, nextPrayer }: Props) {
             }`}
           >
             <div className="flex items-center gap-3.5">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-                isNext ? "bg-white/15" : `bg-gradient-to-br ${meta.gradient}`
-              }`}>
+              <div
+                className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                  isNext ? "bg-white/15" : `bg-linear-to-br ${meta.gradient}`
+                }`}
+              >
                 <span className="text-lg">{meta.icon}</span>
               </div>
               <div>
-                <span className={`text-sm font-semibold ${isNext ? "" : "text-foreground"}`} style={{ fontFamily: 'var(--font-body)' }}>
+                <span
+                  className={`text-sm font-semibold ${isNext ? "" : "text-foreground"}`}
+                  style={{ fontFamily: "var(--font-body)" }}
+                >
                   {prayer}
                 </span>
                 {isNext && (
@@ -54,10 +55,13 @@ export default function PrayerTimesCard({ times, nextPrayer }: Props) {
                 )}
               </div>
             </div>
-            <span className={`text-base font-semibold tabular-nums ${isNext ? "" : "text-foreground"}`} style={{ fontFamily: 'var(--font-body)' }}>
+            <span
+              className={`text-base font-semibold tabular-nums ${isNext ? "" : "text-foreground"}`}
+              style={{ fontFamily: "var(--font-body)" }}
+            >
               {formatTime12h(times[prayer as keyof PrayerTimes])}
             </span>
-          </motion.div>
+          </div>
         );
       })}
     </div>

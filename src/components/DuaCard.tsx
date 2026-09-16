@@ -1,30 +1,98 @@
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import type { Dua } from "@/lib/duas-data";
-
-interface Props {
-  dua: Dua;
-  index: number;
-}
-
-export default function DuaCard({ dua, index }: Props) {
+import { duaContent } from "@/lib/dua-content";
+import { readLocal, writeLocal } from "@/lib/storage";
+export default function DuaCard({ dua }: { dua: Dua; index: number }) {
+  const d = duaContent(dua),
+    [saved, setSaved] = useState(false),
+    [message, setMessage] = useState("");
+  useEffect(() => {
+    const sync = () =>
+      setSaved(
+        readLocal<number[]>("deenflow-dua-favourites", []).includes(d.id),
+      );
+    sync();
+    window.addEventListener("deenflow-storage", sync);
+    return () => window.removeEventListener("deenflow-storage", sync);
+  }, [d.id]);
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05, duration: 0.4 }}
-      className="rounded-2xl bg-card p-5 card-elevated"
-    >
-      <p className="font-arabic text-right text-xl leading-[2.4] text-foreground" dir="rtl">
-        {dua.arabic}
+    <article className="panel">
+      <h2 className="text-lg font-semibold">
+        <a href={"/dua/" + d.id}>{d.title}</a>
+      </h2>
+      {d.excerpt && (
+        <p className="text-xs text-muted-foreground mt-1">
+          Excerpt — see the full source for context.
+        </p>
+      )}
+      <p
+        lang="ar"
+        dir="rtl"
+        className="font-arabic text-2xl leading-[2.3] mt-4"
+      >
+        {d.arabic}
       </p>
-      <div className="mt-4 border-t border-border pt-3 space-y-2">
-        <p className="text-sm leading-relaxed text-muted-foreground" style={{ fontFamily: 'var(--font-body)' }}>
-          {dua.english}
-        </p>
-        <p className="text-[11px] font-semibold text-gradient-gold inline-block" style={{ fontFamily: 'var(--font-body)' }}>
-          {dua.reference}
-        </p>
+      {d.transliteration && (
+        <p className="text-sm italic mt-3">{d.transliteration}</p>
+      )}
+      <p className="text-sm leading-relaxed border-t mt-4 pt-3">{d.english}</p>
+      <p className="text-xs mt-3">
+        {d.sourceUrl ? (
+          <a
+            className="text-primary underline"
+            href={d.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {d.reference} ↗
+          </a>
+        ) : (
+          d.reference
+        )}
+      </p>
+      <p className="text-xs text-muted-foreground mt-2">{d.sourceStatus}</p>
+      <div className="flex gap-3 mt-4">
+        <button
+          className="action secondary"
+          aria-pressed={saved}
+          onClick={() => {
+            const all = readLocal<number[]>("deenflow-dua-favourites", []);
+            writeLocal(
+              "deenflow-dua-favourites",
+              saved ? all.filter((n) => n !== d.id) : [...all, d.id],
+            );
+          }}
+        >
+          {saved ? "★ Saved" : "☆ Save"}
+        </button>
+        <button
+          className="action secondary"
+          onClick={async () => {
+            const text = d.arabic + "\n\n" + d.english + "\n" + d.reference;
+            const url = location.origin + "/dua/" + d.id;
+            try {
+              if (navigator.share)
+                await navigator.share({ title: d.title, text, url });
+              else {
+                await navigator.clipboard.writeText(text + "\n" + url);
+                setMessage("Copied with source.");
+              }
+            } catch (e) {
+              if ((e as Error).name !== "AbortError")
+                setMessage(
+                  "Sharing unavailable. Copy the page link from your browser.",
+                );
+            }
+          }}
+        >
+          Share
+        </button>
       </div>
-    </motion.div>
+      {message && (
+        <p role="status" className="text-xs mt-2">
+          {message}
+        </p>
+      )}
+    </article>
   );
 }

@@ -1,6 +1,16 @@
 {
   "name": "DeenFlow",
   "short_name": "DeenFlow",
+  "id": "/",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["lifestyle", "education"],
+  "shortcuts": [
+    { "name": "Prayer times", "url": "/" },
+    { "name": "Read Quran", "url": "/quran" },
+    { "name": "Daily duas", "url": "/duas" },
+    { "name": "Qibla", "url": "/tools/qibla" }
+  ],
   "description": "Your daily Islamic companion — Prayer times, Quran & Duas",
   "start_url": "/",
   "display": "standalone",

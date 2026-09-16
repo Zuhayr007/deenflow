@@ -1,123 +1,158 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { fetchSurahs, getLastRead, type Surah } from "@/lib/quran-api";
-import { SurahListSkeleton } from "@/components/SkeletonLoader";
-import AppHeader from "@/components/AppHeader";
-
+import { useEffect, useState } from "react";
+import {
+  SURAHS,
+  getLastRead,
+  getBookmarks,
+  verseLocation,
+  fetchSurah,
+  type Ayah,
+} from "@/lib/quran-api";
+import Page from "@/components/Page";
+import { seo } from "@/lib/seo";
 export const Route = createFileRoute("/quran/")({
-  head: () => ({
-    meta: [
-      { title: "Quran — DeenFlow" },
-      { name: "description", content: "Read the Holy Quran with Arabic text and English translation." },
-      { property: "og:title", content: "Quran — DeenFlow" },
-      { property: "og:description", content: "Read the Holy Quran with Arabic text and English translation." },
-    ],
-  }),
+  head: () =>
+    seo(
+      "Quran: Arabic, English Translation & Audio",
+      "Read all 114 surahs, listen to recitation, search verses and continue your reading.",
+      "/quran",
+    ),
   component: QuranPage,
 });
-
 function QuranPage() {
-  const [surahs, setSurahs] = useState<Surah[]>([]);
-  const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(true);
-  const lastRead = getLastRead();
-
+  const [search, setSearch] = useState(""),
+    [last, setLast] = useState<ReturnType<typeof getLastRead>>(null),
+    [bookmarks, setBookmarks] = useState<number[]>([]),
+    [results, setResults] = useState<{ surah: number; ayah: Ayah }[]>([]),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
   useEffect(() => {
-    fetchSurahs().then((data) => {
-      setSurahs(data);
-      setLoading(false);
-    });
+    setLast(getLastRead());
+    setBookmarks(getBookmarks());
   }, []);
-
-  const filtered = surahs.filter(
-    (s) =>
-      s.englishName.toLowerCase().includes(search.toLowerCase()) ||
-      s.englishNameTranslation.toLowerCase().includes(search.toLowerCase()) ||
-      String(s.number).includes(search)
+  const filtered = SURAHS.filter((s) =>
+    [s.englishName, s.englishNameTranslation, s.name, String(s.number)].some(
+      (v) => v.toLowerCase().includes(search.toLowerCase()),
+    ),
   );
-
   return (
-    <div className="safe-bottom min-h-screen">
-      <AppHeader />
-
-      <div className="px-5 pb-2">
-        <h2 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'var(--font-display)' }}>Quran</h2>
-        <p className="mt-0.5 text-sm text-muted-foreground" style={{ fontFamily: 'var(--font-body)' }}>
-          114 Surahs • Arabic & English
-        </p>
-      </div>
-
-      <div className="px-5 space-y-4 mt-2">
-        <div className="relative">
-          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" strokeLinecap="round" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search surahs..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-2xl border border-input bg-card pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 card-elevated"
-            style={{ fontFamily: 'var(--font-body)' }}
-          />
+    <Page title="Quran" intro="114 surahs · Arabic, English & recitation">
+      {last && (
+        <Link
+          className="panel block text-primary"
+          to="/quran/$surahId"
+          params={{ surahId: String(last.surah) }}
+          hash={"ayah-" + last.ayah}
+        >
+          Continue reading · {SURAHS[last.surah - 1].englishName}, ayah{" "}
+          {last.ayah} →
+        </Link>
+      )}
+      <details className="panel">
+        <summary>Saved verses ({bookmarks.length})</summary>
+        <div className="space-y-3 mt-3">
+          {bookmarks.length === 0 ? (
+            <p className="text-sm">Tap the star beside a verse to save it.</p>
+          ) : (
+            bookmarks.map((n) => {
+              const v = verseLocation(n);
+              return (
+                v && (
+                  <Link
+                    key={n}
+                    className="block text-primary"
+                    to="/quran/$surahId"
+                    params={{ surahId: String(v.surah.number) }}
+                    hash={"ayah-" + v.ayah}
+                  >
+                    {v.surah.englishName} {v.surah.number}:{v.ayah}
+                  </Link>
+                )
+              );
+            })
+          )}
         </div>
-
-        {lastRead && (
-          <Link
-            to="/quran/$surahId"
-            params={{ surahId: String(lastRead.surah) }}
-            className="flex items-center gap-3 rounded-2xl border border-primary/15 bg-primary/5 p-4 transition-all hover:bg-primary/10 hover:shadow-md"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-              <span className="text-lg">📖</span>
-            </div>
-            <div className="flex-1">
-              <p className="text-xs font-semibold text-primary" style={{ fontFamily: 'var(--font-body)' }}>Continue Reading</p>
-              <p className="text-xs text-muted-foreground" style={{ fontFamily: 'var(--font-body)' }}>
-                Surah {lastRead.surah}, Ayah {lastRead.ayah}
-              </p>
-            </div>
-            <svg className="h-4 w-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="m9 18 6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </Link>
-        )}
-
-        {loading ? (
-          <SurahListSkeleton />
-        ) : (
-          <div className="space-y-1.5">
-            {filtered.map((surah, i) => (
-              <motion.div
-                key={surah.number}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(i * 0.015, 0.4), duration: 0.35 }}
-              >
-                <Link
-                  to="/quran/$surahId"
-                  params={{ surahId: String(surah.number) }}
-                  className="flex items-center gap-4 rounded-2xl bg-card p-4 transition-all duration-200 hover:shadow-md active:scale-[0.98] card-elevated"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/8 text-sm font-bold text-primary" style={{ fontFamily: 'var(--font-body)' }}>
-                    {surah.number}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <p className="font-semibold text-foreground text-sm" style={{ fontFamily: 'var(--font-body)' }}>{surah.englishName}</p>
-                      <p className="font-arabic text-base text-foreground" dir="rtl">{surah.name}</p>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
-                      {surah.englishNameTranslation} • {surah.numberOfAyahs} Ayahs
-                    </p>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+      </details>
+      <label className="field">
+        Search surahs or verses
+        <input
+          type="search"
+          disabled={busy}
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setResults([]);
+          }}
+          placeholder="Surah name, number or verse text"
+        />
+      </label>
+      <button
+        className="action secondary"
+        disabled={busy || search.trim().length < 3}
+        onClick={async () => {
+          const q = search.trim().toLowerCase();
+          setBusy(true);
+          setError("");
+          try {
+            const matches = [];
+            for (const s of SURAHS) {
+              const data = await fetchSurah(s.number);
+              for (const a of data.ayahs)
+                if (
+                  [a.text, a.translation, a.sahih, a.transliteration].some(
+                    (t) => t.toLowerCase().includes(q),
+                  )
+                )
+                  matches.push({ surah: s.number, ayah: a });
+              if (matches.length >= 100) break;
+            }
+            setResults(matches.slice(0, 100));
+            if (!matches.length) setError("No matching verses found.");
+          } catch {
+            setError(
+              "Some chapters are unavailable offline. Reconnect and try again.",
+            );
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        {busy ? "Searching…" : "Search verse text (up to 100 results)"}
+      </button>
+      {error && <p role="status">{error}</p>}
+      {results.map((r) => (
+        <Link
+          key={r.ayah.number}
+          to="/quran/$surahId"
+          params={{ surahId: String(r.surah) }}
+          hash={"ayah-" + r.ayah.numberInSurah}
+          className="panel block text-sm"
+        >
+          <strong>
+            {r.surah}:{r.ayah.numberInSurah}
+          </strong>
+          <p>{r.ayah.translation}</p>
+        </Link>
+      ))}
+      {filtered.map((s) => (
+        <Link
+          key={s.number}
+          to="/quran/$surahId"
+          params={{ surahId: String(s.number) }}
+          className="panel flex items-center gap-4"
+        >
+          <span className="text-primary font-bold">{s.number}</span>
+          <div className="flex-1">
+            <h2 className="font-semibold">{s.englishName}</h2>
+            <p className="text-xs text-muted-foreground">
+              {s.englishNameTranslation} · {s.numberOfAyahs} ayahs
+            </p>
           </div>
-        )}
-      </div>
-    </div>
+          <span lang="ar" dir="rtl" className="font-arabic text-xl">
+            {s.name}
+          </span>
+        </Link>
+      ))}
+    </Page>
   );
 }

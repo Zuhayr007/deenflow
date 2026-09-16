@@ -1,66 +1,46 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { formatCountdown, getNextPrayer, type PrayerTimes } from "@/lib/prayer-api";
-
-interface Props {
-  times: PrayerTimes;
+import {
+  formatCountdown,
+  getNextScheduledPrayer,
+  formatTime12h,
+  dateInZone,
+  type Schedule,
+} from "@/lib/prayer-api";
+export default function CountdownTimer({
+  schedules,
+  onNextPrayerChange,
+}: {
+  schedules: Schedule[];
   onNextPrayerChange?: (name: string) => void;
-}
-
-export default function CountdownTimer({ times, onNextPrayerChange }: Props) {
-  const [remaining, setRemaining] = useState(() => getNextPrayer(times));
-
+}) {
+  const [now, setNow] = useState(Date.now());
+  const next = getNextScheduledPrayer(schedules, now);
   useEffect(() => {
-    const tick = () => {
-      const next = getNextPrayer(times);
-      setRemaining(next);
-      onNextPrayerChange?.(next.name);
-    };
-    tick();
-    const id = setInterval(tick, 1000);
+    const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [times, onNextPrayerChange]);
-
-  const parts = formatCountdown(remaining.remainingMs).split(":");
-
+  }, []);
+  const nextName = next?.date === schedules[0]?.date ? next?.name : "";
+  useEffect(() => {
+    onNextPrayerChange?.(nextName || "");
+  }, [nextName, onNextPrayerChange]);
+  if (!next) return null;
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.97 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5 }}
-      className="gradient-islamic islamic-pattern relative overflow-hidden rounded-3xl p-7 text-center text-primary-foreground glow-primary"
-    >
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/15" />
-      <div className="absolute top-3 right-3 h-20 w-20 rounded-full bg-white/5 blur-xl" />
-      <div className="relative z-10">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] opacity-70" style={{ fontFamily: 'var(--font-body)' }}>
-          Next Prayer
-        </p>
-        <h2 className="mt-1.5 text-2xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
-          {remaining.name}
-        </h2>
-        <div className="mt-4 flex items-center justify-center gap-2">
-          {parts.map((part, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm">
-                <span className="text-3xl font-bold tabular-nums" style={{ fontFamily: 'var(--font-body)' }}>
-                  {part}
-                </span>
-              </div>
-              {i < parts.length - 1 && (
-                <span className="text-2xl font-light opacity-50">:</span>
-              )}
-            </div>
-          ))}
-        </div>
-        <div className="mt-3 flex justify-center gap-8">
-          {["hours", "min", "sec"].map((label) => (
-            <span key={label} className="text-[10px] font-medium uppercase tracking-wider opacity-50" style={{ fontFamily: 'var(--font-body)' }}>
-              {label}
-            </span>
-          ))}
-        </div>
-      </div>
-    </motion.div>
+    <div className="gradient-islamic islamic-pattern rounded-3xl p-7 text-center text-primary-foreground shadow-lg">
+      <p className="text-xs uppercase tracking-widest">Next prayer</p>
+      <h2 className="text-3xl mt-2">{next.name}</h2>
+      <p className="text-sm mt-2 opacity-90">
+        {next.date === dateInZone(new Date(now), next.timezone)
+          ? "Today"
+          : "Tomorrow"}{" "}
+        at {formatTime12h(next.time)}
+      </p>
+      <p
+        className="text-4xl font-bold tabular-nums mt-5"
+        aria-label={"Time until " + next.name}
+      >
+        {formatCountdown(next.remainingMs)}
+      </p>
+      <p className="text-xs mt-3 opacity-80">hours · minutes · seconds</p>
+    </div>
   );
 }

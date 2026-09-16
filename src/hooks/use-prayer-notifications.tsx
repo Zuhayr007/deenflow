@@ -1,125 +1,128 @@
 import { useCallback, useEffect, useState } from "react";
-import type { PrayerTimes } from "@/lib/prayer-api";
-
-export interface NotificationSettings {
-  enabled: boolean;
-  sound: boolean;
-  minutesBefore: number;
-}
-
-const KEY = "deenflow-notifications";
-const EVENT = "deenflow-notifications-change";
-
-const DEFAULTS: NotificationSettings = { enabled: false, sound: true, minutesBefore: 5 };
-
+import { readLocal, writeLocal } from "@/lib/storage";
+import {
+  NOTIFICATION_DEFAULTS,
+  reminderEvents,
+  type NotificationSettings,
+} from "@/lib/reminders";
+import { showReminder, configurePush, disablePush } from "@/lib/push";
+import { usePrayer } from "./use-prayer";
+export type { NotificationSettings } from "@/lib/reminders";
 export function readSettings(): NotificationSettings {
-  if (typeof window === "undefined") return DEFAULTS;
-  try {
-    const raw = localStorage.getItem(KEY);
-    return raw ? { ...DEFAULTS, ...JSON.parse(raw) } : DEFAULTS;
-  } catch {
-    return DEFAULTS;
-  }
+  return {
+    ...NOTIFICATION_DEFAULTS,
+    ...readLocal<Partial<NotificationSettings>>("deenflow-notifications", {}),
+  };
 }
-
-function writeSettings(s: NotificationSettings) {
-  localStorage.setItem(KEY, JSON.stringify(s));
-  window.dispatchEvent(new CustomEvent(EVENT));
-}
-
-/** Settings state, synced across components. */
 export function useNotificationSettings() {
-  const [settings, setSettings] = useState<NotificationSettings>(DEFAULTS);
-  const [permission, setPermission] = useState<NotificationPermission | "unsupported">("default");
-
+  const [settings, setSettings] = useState(NOTIFICATION_DEFAULTS),
+    [permission, setPermission] = useState<
+      NotificationPermission | "unsupported"
+    >("default"),
+    [error, setError] = useState("");
   useEffect(() => {
-    setSettings(readSettings());
-    setPermission(typeof Notification === "undefined" ? "unsupported" : Notification.permission);
-    const sync = () => setSettings(readSettings());
-    window.addEventListener(EVENT, sync);
-    return () => window.removeEventListener(EVENT, sync);
-  }, []);
-
-  const update = useCallback((patch: Partial<NotificationSettings>) => {
-    const next = { ...readSettings(), ...patch };
-    writeSettings(next);
-    setSettings(next);
-  }, []);
-
-  const toggleEnabled = useCallback(async () => {
-    const current = readSettings();
-    if (current.enabled) {
-      update({ enabled: false });
-      return;
-    }
-    if (typeof Notification === "undefined") {
-      setPermission("unsupported");
-      return;
-    }
-    let perm = Notification.permission;
-    if (perm === "default") perm = await Notification.requestPermission();
-    setPermission(perm);
-    if (perm !== "granted") return;
-    update({ enabled: true });
-    new Notification("DeenFlow reminders on", {
-      body: `You'll be alerted ${current.minutesBefore} minutes before each salah.`,
-      icon: "/icon-192.png",
-      silent: !current.sound,
-    });
-  }, [update]);
-
-  return { settings, permission, update, toggleEnabled };
-}
-
-const PRAYERS = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"] as const;
-
-/** Schedules a reminder before each remaining prayer today (while the app is open). */
-export function usePrayerNotifications(times: PrayerTimes | null) {
-  const { settings } = useNotificationSettings();
-
-  useEffect(() => {
-    if (!times || !settings.enabled) return;
-    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
-
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    const now = Date.now();
-
-    const schedule = (delay: number, title: string, body: string, tag: string) => {
-      if (delay <= 0 || delay > 24 * 60 * 60_000) return;
-      timers.push(
-        setTimeout(() => {
-          new Notification(title, {
-            body,
-            icon: "/icon-192.png",
-            badge: "/icon-192.png",
-            tag,
-            silent: !settings.sound,
-          });
-        }, delay)
+    const sync = () => {
+      setSettings((previous) => {
+        const next = readSettings();
+        return JSON.stringify(previous) === JSON.stringify(next)
+          ? previous
+          : next;
+      });
+      setPermission(
+        typeof Notification === "undefined"
+          ? "unsupported"
+          : Notification.permission,
       );
     };
-
-    for (const prayer of PRAYERS) {
-      const [h, m] = times[prayer].split(":").map(Number);
-      const at = new Date();
-      at.setHours(h, m, 0, 0);
-      const startAt = at.getTime();
-
-      schedule(
-        startAt - settings.minutesBefore * 60_000 - now,
-        `${prayer} in ${settings.minutesBefore} minutes`,
-        `${prayer} begins at ${times[prayer]}. Time to prepare for salah.`,
-        `deenflow-${prayer}-before`
-      );
-
-      schedule(
-        startAt - now,
-        `It's time for ${prayer}`,
-        `${prayer} has begun at ${times[prayer]}. Hayya 'ala-s-Salah.`,
-        `deenflow-${prayer}-start`
+    sync();
+    window.addEventListener("deenflow-storage", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("deenflow-storage", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+  const update = useCallback((patch: Partial<NotificationSettings>) => {
+    const next = { ...readSettings(), ...patch };
+    writeLocal("deenflow-notifications", next);
+    setSettings(next);
+  }, []);
+  const toggleEnabled = useCallback(async () => {
+    setError("");
+    try {
+      if (readSettings().enabled) {
+        await disablePush();
+        update({ enabled: false });
+        return;
+      }
+      if (typeof Notification === "undefined") {
+        setPermission("unsupported");
+        return;
+      }
+      const p = await Notification.requestPermission();
+      setPermission(p);
+      if (p === "granted") {
+        update({ enabled: true });
+        await showReminder("DeenFlow reminders enabled", {
+          body: "Keep DeenFlow open for foreground reminders. Enable background reminders in settings.",
+          silent: !readSettings().sound,
+        });
+      }
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }, [update]);
+  return { settings, permission, update, toggleEnabled, error };
+}
+export function PrayerReminders() {
+  const { settings } = useNotificationSettings(),
+    { schedules, preferences } = usePrayer();
+  useEffect(() => {
+    if (
+      !settings.enabled ||
+      !preferences.location ||
+      typeof Notification === "undefined" ||
+      Notification.permission !== "granted"
+    )
+      return;
+    let cancelled = false;
+    // Synchronize active background subscriptions whenever prayer or alert preferences change.
+    if (readLocal("deenflow-push-active", false))
+      void configurePush(preferences, settings).catch(() => {
+        window.dispatchEvent(new CustomEvent("deenflow-push-error"));
+      });
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    for (const event of reminderEvents(schedules, settings)) {
+      const delay = event.at - Date.now();
+      if (delay <= 0 || delay > 86400000) continue;
+      timers.push(
+        setTimeout(() => {
+          if (cancelled || readLocal("deenflow-push-active", false)) return;
+          const fired = readLocal<Record<string, number>>("deenflow-fired", {});
+          if (fired[event.tag]) return;
+          const recent = Object.fromEntries(
+            Object.entries(fired).filter(
+              ([, at]) => at > Date.now() - 172800000,
+            ),
+          );
+          recent[event.tag] = Date.now();
+          try {
+            localStorage.setItem("deenflow-fired", JSON.stringify(recent));
+          } catch {
+            /* Storage is optional. */
+          }
+          void showReminder(event.title, {
+            body: event.body,
+            tag: event.tag,
+            silent: !settings.sound,
+          }).catch(() => undefined);
+        }, delay),
       );
     }
-
-    return () => timers.forEach(clearTimeout);
-  }, [times, settings.enabled, settings.sound, settings.minutesBefore]);
+    return () => {
+      cancelled = true;
+      timers.forEach(clearTimeout);
+    };
+  }, [schedules, preferences, settings]);
+  return null;
 }

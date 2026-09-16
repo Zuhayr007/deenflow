@@ -1,39 +1,46 @@
 import { useState, useEffect, useCallback } from "react";
-
+import { writeLocal } from "@/lib/storage";
 type Theme = "light" | "dark" | "system";
-
-function getStoredTheme(): Theme {
+function stored(): Theme {
   try {
-    return (localStorage.getItem("deenflow-theme") as Theme) || "system";
+    const raw = localStorage.getItem("deenflow-theme");
+    const value = raw?.startsWith('"') ? JSON.parse(raw) : raw;
+    return ["light", "dark", "system"].includes(value) ? value : "system";
   } catch {
     return "system";
   }
 }
-
-function applyTheme(theme: Theme) {
-  const root = document.documentElement;
-  const isDark =
+function apply(theme: Theme) {
+  document.documentElement.classList.toggle(
+    "dark",
     theme === "dark" ||
-    (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-  root.classList.toggle("dark", isDark);
+      (theme === "system" &&
+        matchMedia("(prefers-color-scheme: dark)").matches),
+  );
 }
-
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>(getStoredTheme);
-
+  const [theme, setState] = useState<Theme>("system");
   const setTheme = useCallback((t: Theme) => {
-    setThemeState(t);
-    localStorage.setItem("deenflow-theme", t);
-    applyTheme(t);
+    setState(t);
+    writeLocal("deenflow-theme", t);
+    apply(t);
   }, []);
-
   useEffect(() => {
-    applyTheme(theme);
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = () => { if (theme === "system") applyTheme("system"); };
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, [theme]);
-
+    const sync = () => {
+      const next = stored();
+      setState(next);
+      apply(next);
+    };
+    sync();
+    window.addEventListener("storage", sync);
+    window.addEventListener("deenflow-storage", sync);
+    const mq = matchMedia("(prefers-color-scheme: dark)");
+    mq.addEventListener("change", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("deenflow-storage", sync);
+      mq.removeEventListener("change", sync);
+    };
+  }, []);
   return { theme, setTheme };
 }

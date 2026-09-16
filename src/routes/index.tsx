@@ -1,128 +1,106 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { motion } from "framer-motion";
-import {
-  getUserLocation,
-  fetchPrayerTimes,
-  type PrayerTimes,
-  type Location,
-} from "@/lib/prayer-api";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { usePrayer } from "@/hooks/use-prayer";
+import LocationStatus from "@/components/LocationStatus";
 import PrayerTimesCard from "@/components/PrayerTimesCard";
 import CountdownTimer from "@/components/CountdownTimer";
-import { PrayerSkeleton, CountdownSkeleton } from "@/components/SkeletonLoader";
-import AppHeader from "@/components/AppHeader";
+import Page from "@/components/Page";
 import { DUAS } from "@/lib/duas-data";
-import { usePrayerNotifications } from "@/hooks/use-prayer-notifications";
-
+import { METHODS, formatTime12h } from "@/lib/prayer-api";
+import { seo } from "@/lib/seo";
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "DeenFlow | Islamic Companion" },
-      { name: "description", content: "Your daily Islamic companion with prayer times, Quran, and duas." },
-      { property: "og:title", content: "DeenFlow | Islamic Companion" },
-      { property: "og:description", content: "Your daily Islamic companion with prayer times, Quran, and duas." },
-      { property: "og:image", content: "/og-image.png" },
-    ],
-  }),
+  head: () =>
+    seo(
+      "Prayer Times, Quran & Daily Duas",
+      "Your daily Islamic companion: local salah times, Quran reading and audio, sourced duas, Qibla and offline tools.",
+      "/",
+    ),
   component: PrayerPage,
 });
-
 function PrayerPage() {
-  const [times, setTimes] = useState<PrayerTimes | null>(null);
-  const [location, setLocation] = useState<Location | null>(null);
-  const [nextPrayer, setNextPrayer] = useState("Fajr");
-  const [loading, setLoading] = useState(true);
+  const { preferences, schedules, error, locationStatus } = usePrayer(),
+    [next, setNext] = useState("Fajr"),
+    [showPrayerContent, setShowPrayerContent] = useState(false);
+  const today = schedules[0];
+  const isLoading = locationStatus === "locating" || (!error && !today);
 
   useEffect(() => {
-    (async () => {
-      const loc = await getUserLocation();
-      setLocation(loc);
-      const t = await fetchPrayerTimes(loc);
-      setTimes(t);
-      setLoading(false);
-    })();
-  }, []);
+    if (!isLoading && today) {
+      const frame = requestAnimationFrame(() => setShowPrayerContent(true));
+      return () => cancelAnimationFrame(frame);
+    }
+    setShowPrayerContent(false);
+    return undefined;
+  }, [isLoading, today]);
 
-  usePrayerNotifications(times);
-
-  const handleNextPrayerChange = useCallback((name: string) => {
-    setNextPrayer(name);
-  }, []);
-
-  const today = new Date();
-  const dateStr = today.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
+  const daily =
+    DUAS[
+      (today ? Math.floor(Date.parse(today.date) / 86400000) : 0) % DUAS.length
+    ];
 
   return (
-    <div className="safe-bottom min-h-screen">
-      <AppHeader />
-
-      <div className="px-5 space-y-6">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="flex items-center justify-between"
-        >
-          <div>
-            <p className="text-xs font-medium text-muted-foreground" style={{ fontFamily: 'var(--font-body)' }}>
-              {dateStr}
-            </p>
-            {location && (
-              <p className="mt-0.5 text-xs text-muted-foreground/70" style={{ fontFamily: 'var(--font-body)' }}>
-                📍 {location.city}
-              </p>
-            )}
-          </div>
-        </motion.div>
-
-        {loading ? (
-          <>
-            <CountdownSkeleton />
-            <PrayerSkeleton />
-          </>
-        ) : times ? (
-          <>
-            <CountdownTimer times={times} onNextPrayerChange={handleNextPrayerChange} />
-            <div>
-              <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground" style={{ fontFamily: 'var(--font-body)' }}>
-                Today's Prayers
-              </h3>
-              <PrayerTimesCard times={times} nextPrayer={nextPrayer} />
+    <Page
+      title="Your daily salah"
+      intro="A little space for your deen, every day."
+    >
+      <LocationStatus />
+      {error && (
+        <p role="alert" className="panel">
+          {error}
+        </p>
+      )}
+      {isLoading ? (
+        <div className="panel prayer-loading-shell">
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <div className="relative flex h-20 w-20 items-center justify-center">
+              <div className="prayer-loader-ring absolute inset-0 rounded-full border border-primary/10" />
+              <div className="prayer-loader-orbit absolute inset-1.5 rounded-full border-2 border-primary/15 border-t-primary border-r-primary/60" />
+              <div className="prayer-loader-orbit-alt absolute inset-3 rounded-full border border-primary/20 border-b-primary/70 border-l-primary/40" />
+              <div className="absolute inset-6 rounded-full bg-linear-to-br from-primary/20 via-primary/8 to-transparent" />
+              <div className="relative h-3.5 w-3.5 rounded-full bg-primary shadow-[0_0_18px_rgba(16,185,129,0.55)]" />
             </div>
-          </>
-        ) : null}
+            <p className="mt-4 text-sm font-medium text-muted-foreground">
+              Calculating your prayer times...
+            </p>
+          </div>
+        </div>
+      ) : (
+        today && (
+          <div
+            className={`prayer-card-enter ${showPrayerContent ? "is-visible" : "is-hidden"}`}
+          >
+            <div className="space-y-4 py-1">
+              <div className="flex justify-between text-sm">
+                <span>{preferences.location?.city}</span>
+                <time>{today.date}</time>
+              </div>
+              <CountdownTimer schedules={schedules} onNextPrayerChange={setNext} />
+              <h2 className="text-lg font-semibold pt-1">Today's prayer times</h2>
+              <div className="pt-1 pb-1">
+                <PrayerTimesCard times={today.times} nextPrayer={next} />
+              </div>
+            </div>
+          </div>
+        )
+      )}
 
-        {(() => {
-          const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
-          const dailyDua = DUAS[dayOfYear % DUAS.length];
-          return (
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="relative overflow-hidden rounded-2xl border border-gold/20 bg-linear-to-br from-gold/5 to-gold/10 p-5 text-center"
-            >
-              <div className="absolute inset-0 shimmer" />
-              <span className="relative inline-block rounded-full bg-primary/10 px-3 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary mb-3" style={{ fontFamily: 'var(--font-body)' }}>
-                Daily Dua · {dailyDua.category}
-              </span>
-              <p className="relative font-arabic text-xl leading-relaxed text-foreground" dir="rtl">
-                {dailyDua.arabic}
-              </p>
-              <p className="relative mt-2 text-xs font-medium text-muted-foreground" style={{ fontFamily: 'var(--font-body)' }}>
-                {dailyDua.english}
-              </p>
-              <p className="relative mt-1.5 text-[10px] font-semibold text-gradient-gold inline-block" style={{ fontFamily: 'var(--font-body)' }}>
-                {dailyDua.reference}
-              </p>
-            </motion.div>
-          );
-        })()}
-      </div>
-    </div>
+      <article
+        className={`panel bg-gold/10 text-center prayer-card-enter ${
+          showPrayerContent ? "is-visible" : "is-hidden"
+        }`}
+      >
+        <h2 className="text-xs uppercase tracking-widest mb-4">
+          Daily dua · {daily.category}
+        </h2>
+        <p lang="ar" dir="rtl" className="font-arabic text-2xl leading-loose">
+          {daily.arabic}
+        </p>
+        <p className="text-sm mt-3">{daily.english}</p>
+        <p className="text-xs mt-3 text-muted-foreground">{daily.reference}</p>
+        <Link to="/duas" className="text-primary text-sm inline-block mt-3">
+          Explore duas →
+        </Link>
+      </article>
+    </Page>
   );
 }

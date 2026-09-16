@@ -1,0 +1,11 @@
+{
+  "provider": "https://alquran.cloud/api",
+  "editions": [
+    "quran-uthmani",
+    "en.asad",
+    "en.transliteration",
+    "en.sahih"
+  ],
+  "downloaded": "2026-09-16T18:35:20.793Z",
+  "verses": 6236
+}

@@ -1,124 +1,216 @@
+import { useState } from "react";
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { useTheme } from "@/hooks/use-theme";
 import { useNotificationSettings } from "@/hooks/use-prayer-notifications";
-import { Switch } from "@/components/ui/switch";
-import { Bell, Volume2 } from "lucide-react";
-
-const themes = [
-  { value: "light" as const, label: "Light", icon: "☀️" },
-  { value: "dark" as const, label: "Dark", icon: "🌙" },
-  { value: "system" as const, label: "System", icon: "💻" },
-];
-
-export default function SettingsSheet({ children }: { children: React.ReactNode }) {
-  const { theme, setTheme } = useTheme();
-  const { settings, permission, update, toggleEnabled } = useNotificationSettings();
-
+import { usePrayer } from "@/hooks/use-prayer";
+import { PRAYERS } from "@/lib/prayer-api";
+import { configurePush, disablePush, showReminder } from "@/lib/push";
+export default function SettingsSheet({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { theme, setTheme } = useTheme(),
+    { settings, permission, update, toggleEnabled, error } =
+      useNotificationSettings(),
+    { preferences } = usePrayer(),
+    [message, setMessage] = useState(""),
+    [busy, setBusy] = useState(false);
   return (
-    <Drawer>
+    <Drawer autoFocus>
       <DrawerTrigger asChild>{children}</DrawerTrigger>
-      <DrawerContent>
+      <DrawerContent className="max-h-[90dvh]">
         <DrawerHeader>
-          <DrawerTitle style={{ fontFamily: "var(--font-display)" }}>Settings</DrawerTitle>
+          <DrawerTitle>Settings</DrawerTitle>
+          <DrawerDescription>
+            Customize appearance and prayer reminders.
+          </DrawerDescription>
         </DrawerHeader>
-        <div className="px-4 pb-8 space-y-6">
-          {/* Theme */}
-          <div>
-            <p className="text-sm font-semibold text-foreground mb-3" style={{ fontFamily: "var(--font-body)" }}>
-              Appearance
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              {themes.map((t) => (
-                <button
-                  key={t.value}
-                  onClick={() => setTheme(t.value)}
-                  className={`flex flex-col items-center gap-1.5 rounded-2xl border-2 p-4 transition-all ${
-                    theme === t.value
-                      ? "border-primary bg-primary/8 shadow-sm"
-                      : "border-border bg-card hover:border-primary/30"
-                  }`}
-                >
-                  <span className="text-2xl">{t.icon}</span>
-                  <span
-                    className={`text-xs font-medium ${theme === t.value ? "text-primary" : "text-muted-foreground"}`}
-                    style={{ fontFamily: "var(--font-body)" }}
-                  >
-                    {t.label}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Prayer reminders */}
-          <div>
-            <p className="text-sm font-semibold text-foreground mb-3" style={{ fontFamily: "var(--font-body)" }}>
-              Prayer Reminders
-            </p>
-            <div className="rounded-2xl border border-border bg-card divide-y divide-border">
-              <div className="flex items-center gap-3 p-4">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <Bell className="h-4 w-4" />
-                </span>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                    Alert before salah
-                  </p>
-                  <p className="text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                    {settings.minutesBefore} minutes before each prayer
-                  </p>
-                </div>
-                <Switch checked={settings.enabled} onCheckedChange={() => void toggleEnabled()} />
-              </div>
-
-              <div className={`flex items-center gap-3 p-4 ${settings.enabled ? "" : "opacity-50"}`}>
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gold/10 text-gold">
-                  <Volume2 className="h-4 w-4" />
-                </span>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                    Sound
-                  </p>
-                  <p className="text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                    Uses your device's default tone
-                  </p>
-                </div>
-                <Switch
-                  checked={settings.sound}
-                  disabled={!settings.enabled}
-                  onCheckedChange={(v) => update({ sound: v })}
-                />
-              </div>
-            </div>
+        <div className="overflow-y-auto px-5 pb-10 space-y-5">
+          <label className="field">
+            Appearance
+            <select
+              value={theme}
+              onChange={(e) =>
+                setTheme(e.target.value as "light" | "dark" | "system")
+              }
+            >
+              <option value="system">Follow device</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </label>
+          <section className="panel space-y-4">
+            <h2 className="font-semibold">Prayer reminders</h2>
+            <label className="flex gap-3 items-center">
+              <input
+                type="checkbox"
+                checked={settings.enabled}
+                onChange={() => void toggleEnabled()}
+              />
+              Enable reminders
+            </label>
             {permission === "denied" && (
-              <p className="mt-2 text-[11px] text-destructive" style={{ fontFamily: "var(--font-body)" }}>
-                Notifications are blocked. Allow them for DeenFlow in your browser settings.
+              <p role="alert" className="text-sm">
+                Notifications are blocked. Allow them in your browser settings.
               </p>
             )}
             {permission === "unsupported" && (
-              <p className="mt-2 text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                This device doesn't support notifications.
+              <p className="text-sm">
+                Notifications are unavailable here. On supported iPhones, add
+                DeenFlow to your Home Screen and open it there.
               </p>
             )}
-            {settings.enabled && (
-              <p className="mt-2 text-[11px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                Keep DeenFlow open or installed in the background to receive reminders.
+            <fieldset disabled={!settings.enabled} className="space-y-4">
+              <legend className="sr-only">Notification preferences</legend>
+              <label className="field">
+                Minutes before prayer
+                <select
+                  value={settings.minutesBefore}
+                  onChange={(e) =>
+                    update({ minutesBefore: Number(e.target.value) })
+                  }
+                >
+                  {[0, 5, 10, 15, 30].map((n) => (
+                    <option key={n} value={n}>
+                      {n === 0 ? "No advance alert" : n + " minutes"}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex gap-3">
+                <input
+                  type="checkbox"
+                  checked={settings.atTime}
+                  onChange={(e) => update({ atTime: e.target.checked })}
+                />
+                Also alert at prayer time
+              </label>
+              <label className="flex gap-3">
+                <input
+                  type="checkbox"
+                  checked={settings.sound}
+                  onChange={(e) => update({ sound: e.target.checked })}
+                />
+                Device notification sound
+              </label>
+              <div className="flex flex-wrap gap-4">
+                {PRAYERS.map((p) => (
+                  <label key={p} className="flex gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={settings.prayers.includes(p)}
+                      onChange={(e) =>
+                        update({
+                          prayers: e.target.checked
+                            ? [...settings.prayers, p]
+                            : settings.prayers.filter((v) => v !== p),
+                        })
+                      }
+                    />
+                    {p}
+                  </label>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="field">
+                  Quiet hours from
+                  <input
+                    type="time"
+                    value={settings.quietStart}
+                    onChange={(e) => update({ quietStart: e.target.value })}
+                  />
+                </label>
+                <label className="field">
+                  Until
+                  <input
+                    type="time"
+                    value={settings.quietEnd}
+                    onChange={(e) => update({ quietEnd: e.target.value })}
+                  />
+                </label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Uses your selected location's timezone. Clear either field to
+                disable quiet hours.
               </p>
-            )}
-          </div>
-
-          {/* App info */}
-          <div className="rounded-2xl bg-secondary/50 p-4 text-center">
-            <p className="text-xs text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-              DeenFlow v1.0 — Your daily Islamic companion
+              <label className="flex gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  checked={settings.adhkar}
+                  onChange={(e) => update({ adhkar: e.target.checked })}
+                />
+                Adhkar reminder 20 minutes after Fajr and Asr
+              </label>
+              <button
+                className="action secondary"
+                onClick={() =>
+                  void showReminder("DeenFlow test reminder", {
+                    body: "Your device can display reminders.",
+                    silent: !settings.sound,
+                  })
+                    .then(() => setMessage("Test reminder sent."))
+                    .catch((e) => setMessage(e.message))
+                }
+              >
+                Send test reminder
+              </button>
+            </fieldset>
+          </section>
+          <section className="panel space-y-3">
+            <h2 className="font-semibold">Background reminders</h2>
+            <p className="text-sm text-muted-foreground">
+              Foreground alerts work while DeenFlow is running. Background
+              delivery requires permission, an internet connection and a
+              supported device; timing can be affected by battery settings.
             </p>
-          </div>
+            <button
+              className="action"
+              disabled={busy || !settings.enabled || !preferences.location}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await configurePush(preferences, settings);
+                  setMessage("Background reminders enabled.");
+                } catch (e) {
+                  setMessage((e as Error).message);
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Enable background reminders
+            </button>
+            <button
+              className="action secondary"
+              disabled={busy}
+              onClick={async () => {
+                try {
+                  await disablePush();
+                  setMessage("Background reminders disabled.");
+                } catch (e) {
+                  setMessage((e as Error).message);
+                }
+              }}
+            >
+              Disable background reminders
+            </button>
+          </section>
+          {(message || error) && (
+            <p role="status" className="text-sm">
+              {message || error}
+            </p>
+          )}
+          <a className="action secondary" href="/tools/backup">
+            Offline downloads & backup
+          </a>
         </div>
       </DrawerContent>
     </Drawer>

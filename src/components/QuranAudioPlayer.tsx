@@ -1,272 +1,266 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Slider } from "@/components/ui/slider";
-
-interface QuranAudioPlayerProps {
-  surahNumber: number;
-  surahName: string;
-  totalAyahs: number;
-  currentAyah: number;
-  onAyahChange: (ayahNumber: number) => void;
-}
-
-const RECITER = "ar.alafasy"; // Mishary Rashid Alafasy
-
+import { useEffect, useRef, useState } from "react";
+import { SURAHS } from "@/lib/quran-api";
 export default function QuranAudioPlayer({
   surahNumber,
   surahName,
   totalAyahs,
   currentAyah,
   onAyahChange,
-}: QuranAudioPlayerProps) {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [playing, setPlaying] = useState(false);
-  const [playingAyah, setPlayingAyah] = useState(1);
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-
-  const getAudioUrl = useCallback(
-    (ayah: number) =>
-      `https://cdn.islamic.network/quran/audio/128/${RECITER}/${getGlobalAyahNumber(surahNumber, ayah)}.mp3`,
-    [surahNumber]
-  );
-
-  // Precompute global ayah number (cumulative)
-  function getGlobalAyahNumber(surah: number, ayahInSurah: number): number {
-    const ayahCounts = [0,7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6];
-    let global = 0;
-    for (let i = 1; i < surah; i++) global += ayahCounts[i] || 0;
-    return global + ayahInSurah;
-  }
-
-  const playAyah = useCallback(
-    (ayah: number) => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      setLoading(true);
-      const audio = new Audio(getAudioUrl(ayah));
-      audioRef.current = audio;
-      setPlayingAyah(ayah);
-      onAyahChange(ayah);
-
-      audio.addEventListener("loadedmetadata", () => {
-        setDuration(audio.duration);
-        setLoading(false);
-      });
-      audio.addEventListener("timeupdate", () => {
-        setProgress(audio.currentTime);
-      });
-      audio.addEventListener("ended", () => {
-        if (ayah < totalAyahs) {
-          playAyah(ayah + 1);
-        } else {
-          setPlaying(false);
-          setProgress(0);
-        }
-      });
-      audio.addEventListener("error", () => {
-        setLoading(false);
-        setPlaying(false);
-      });
-
-      audio.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
-    },
-    [getAudioUrl, totalAyahs, onAyahChange]
-  );
-
-  const togglePlay = () => {
-    if (!audioRef.current || !playing) {
-      playAyah(playingAyah);
-    } else {
-      audioRef.current.pause();
-      setPlaying(false);
-    }
-  };
-
-  const resumeOrPause = () => {
-    if (!audioRef.current) {
-      playAyah(playingAyah);
-      return;
-    }
-    if (playing) {
-      audioRef.current.pause();
-      setPlaying(false);
-    } else {
-      audioRef.current.play().then(() => setPlaying(true));
-    }
-  };
-
-  const skipNext = () => {
-    if (playingAyah < totalAyahs) playAyah(playingAyah + 1);
-  };
-
-  const skipPrev = () => {
-    if (playingAyah > 1) playAyah(playingAyah - 1);
-  };
-
-  const seekTo = (val: number[]) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = val[0];
-      setProgress(val[0]);
-    }
-  };
-
+}: {
+  surahNumber: number;
+  surahName: string;
+  totalAyahs: number;
+  currentAyah: number;
+  onAyahChange: (n: number) => void;
+}) {
+  const audio = useRef<HTMLAudioElement>(null),
+    callback = useRef(onAyahChange);
+  callback.current = onAyahChange;
+  const [playing, setPlaying] = useState(false),
+    [progress, setProgress] = useState(0),
+    [duration, setDuration] = useState(0),
+    [error, setError] = useState("");
+  const [reciter, setReciter] = useState("ar.alafasy"),
+    [speed, setSpeed] = useState(1),
+    [repeat, setRepeat] = useState("off"),
+    [start, setStart] = useState(1),
+    [end, setEnd] = useState(totalAyahs);
+  const shouldPlay = useRef(false);
+  const global =
+    SURAHS.slice(0, surahNumber - 1).reduce((n, s) => n + s.numberOfAyahs, 0) +
+    currentAyah;
+  const url =
+    "https://cdn.islamic.network/quran/audio/128/" +
+    reciter +
+    "/" +
+    global +
+    ".mp3";
   useEffect(() => {
+    const element = audio.current;
     return () => {
-      audioRef.current?.pause();
+      shouldPlay.current = false;
+      element?.pause();
+      element?.removeAttribute("src");
+      element?.load();
     };
   }, []);
-
-  const formatTime = (t: number) => {
-    const m = Math.floor(t / 60);
-    const s = Math.floor(t % 60);
-    return `${m}:${s.toString().padStart(2, "0")}`;
+  useEffect(() => {
+    setProgress(0);
+    setDuration(0);
+    setError("");
+    const a = audio.current;
+    if (a) {
+      a.load();
+      if (shouldPlay.current)
+        void a.play().catch(() => {
+          setError("Tap play to start audio.");
+          setPlaying(false);
+        });
+    }
+  }, [url]);
+  useEffect(() => {
+    if (audio.current) audio.current.playbackRate = speed;
+  }, [speed, url]);
+  const play = async () => {
+    const a = audio.current;
+    if (!a) return;
+    setError("");
+    if (!a.paused) {
+      shouldPlay.current = false;
+      a.pause();
+    } else {
+      shouldPlay.current = true;
+      try {
+        await a.play();
+      } catch {
+        setError("Audio could not play. Check your connection and try again.");
+        shouldPlay.current = false;
+      }
+    }
   };
-
+  const jump = (n: number) => {
+    if (n >= 1 && n <= totalAyahs) callback.current(n);
+  };
   return (
-    <motion.div
-      layout
-      className="fixed bottom-[72px] left-0 right-0 z-40 px-3"
+    <aside
+      className="fixed left-0 right-0 z-40 px-3"
+      style={{ bottom: "calc(74px + env(safe-area-inset-bottom, 0px))" }}
+      aria-label="Quran audio"
     >
-      <motion.div
-        layout
-        className="mx-auto max-w-lg rounded-2xl glass border border-border/50 shadow-xl overflow-hidden"
-      >
-        {/* Compact bar */}
-        <div
-          className="flex items-center gap-3 px-4 py-3 cursor-pointer"
-          onClick={() => setExpanded(!expanded)}
-        >
-          {/* Play/Pause */}
+      <div className="max-w-lg max-h-[55dvh] overflow-y-auto mx-auto bg-card rounded-2xl border p-3 shadow-xl">
+        <audio
+          ref={audio}
+          src={url}
+          preload="none"
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onTimeUpdate={(e) => setProgress(e.currentTarget.currentTime)}
+          onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+          onError={() => {
+            setError("Recitation unavailable. Reconnect and retry.");
+            setPlaying(false);
+          }}
+          onEnded={() => {
+            if (
+              repeat === "ayah" ||
+              (repeat === "range" && currentAyah >= end)
+            ) {
+              if (repeat === "ayah" || currentAyah === start) {
+                if (audio.current) {
+                  audio.current.currentTime = 0;
+                  void audio.current
+                    .play()
+                    .catch(() => setError("Tap play to continue."));
+                }
+              } else jump(start);
+            } else if (currentAyah < totalAyahs) jump(currentAyah + 1);
+            else {
+              shouldPlay.current = false;
+              setPlaying(false);
+            }
+          }}
+        />
+        <div className="flex items-center gap-3">
           <button
-            onClick={(e) => { e.stopPropagation(); resumeOrPause(); }}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition-transform active:scale-90"
-            aria-label={playing ? "Pause" : "Play"}
+            className="action"
+            onClick={() => void play()}
+            aria-label={playing ? "Pause recitation" : "Play recitation"}
           >
-            {loading ? (
-              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
-              </svg>
-            ) : playing ? (
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                <rect x="6" y="4" width="4" height="16" rx="1" />
-                <rect x="14" y="4" width="4" height="16" rx="1" />
-              </svg>
-            ) : (
-              <svg className="h-4 w-4 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-            )}
+            {playing ? "Pause" : "Play"}
           </button>
-
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-foreground truncate" style={{ fontFamily: "var(--font-body)" }}>
-              {surahName} — Ayah {playingAyah}
+          <div className="flex-1 text-sm">
+            <p className="font-semibold">
+              {surahName} · {currentAyah}/{totalAyahs}
             </p>
-            <p className="text-[10px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-              Mishary Rashid Alafasy
+            <p className="text-xs text-muted-foreground">
+              Verse-by-verse recitation
             </p>
           </div>
-
-          {/* Mini progress */}
-          <div className="w-16 h-1 rounded-full bg-primary/20 overflow-hidden">
-            <div
-              className="h-full bg-primary rounded-full transition-all"
-              style={{ width: `${duration ? (progress / duration) * 100 : 0}%` }}
-            />
-          </div>
-
-          {/* Expand chevron */}
-          <motion.svg
-            animate={{ rotate: expanded ? 180 : 0 }}
-            className="h-4 w-4 text-muted-foreground shrink-0"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
+          <button
+            aria-label="Previous ayah"
+            disabled={currentAyah === 1}
+            onClick={() => jump(currentAyah - 1)}
           >
-            <path d="m18 15-6-6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-          </motion.svg>
+            ←
+          </button>
+          <button
+            aria-label="Next ayah"
+            disabled={currentAyah === totalAyahs}
+            onClick={() => jump(currentAyah + 1)}
+          >
+            →
+          </button>
         </div>
-
-        {/* Expanded controls */}
-        <AnimatePresence>
-          {expanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="overflow-hidden"
-            >
-              <div className="px-4 pb-4 space-y-3">
-                {/* Seek slider */}
-                <Slider
-                  value={[progress]}
-                  max={duration || 1}
-                  step={0.1}
-                  onValueChange={seekTo}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-[10px] text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-                  <span>{formatTime(progress)}</span>
-                  <span>{formatTime(duration)}</span>
-                </div>
-
-                {/* Transport controls */}
-                <div className="flex items-center justify-center gap-6">
-                  <button
-                    onClick={skipPrev}
-                    disabled={playingAyah <= 1}
-                    className="text-foreground disabled:text-muted-foreground/30 transition-colors active:scale-90"
-                    aria-label="Previous ayah"
-                  >
-                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" />
-                    </svg>
-                  </button>
-
-                  <button
-                    onClick={resumeOrPause}
-                    className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-90"
-                    aria-label={playing ? "Pause" : "Play"}
-                  >
-                    {loading ? (
-                      <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
-                      </svg>
-                    ) : playing ? (
-                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                        <rect x="6" y="4" width="4" height="16" rx="1" />
-                        <rect x="14" y="4" width="4" height="16" rx="1" />
-                      </svg>
-                    ) : (
-                      <svg className="h-5 w-5 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    )}
-                  </button>
-
-                  <button
-                    onClick={skipNext}
-                    disabled={playingAyah >= totalAyahs}
-                    className="text-foreground disabled:text-muted-foreground/30 transition-colors active:scale-90"
-                    aria-label="Next ayah"
-                  >
-                    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M16 18h2V6h-2zm-8.5-6 8.5 6V6z" transform="scale(-1,1) translate(-24,0)" />
-                      <path d="M16 18h2V6h-2zM4 6l8.5 6L4 18z" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-    </motion.div>
+        <details className="mt-2 text-xs">
+          <summary>Audio & memorization controls</summary>
+          <div className="grid grid-cols-2 gap-3 mt-3">
+            <label className="field col-span-2">
+              Seek
+              <input
+                type="range"
+                min="0"
+                max={duration || 1}
+                step=".1"
+                value={Math.min(progress, duration || 1)}
+                onChange={(e) => {
+                  if (audio.current)
+                    audio.current.currentTime = Number(e.target.value);
+                }}
+              />
+            </label>
+            <label className="field">
+              Reciter
+              <select
+                value={reciter}
+                onChange={(e) => setReciter(e.target.value)}
+              >
+                <option value="ar.alafasy">Mishary Alafasy</option>
+                <option value="ar.abdurrahmaansudais">
+                  Abdurrahman As-Sudais
+                </option>
+                <option value="ar.husary">Mahmoud Khalil Al-Husary</option>
+              </select>
+            </label>
+            <label className="field">
+              Playback speed
+              <select
+                value={speed}
+                onChange={(e) => setSpeed(Number(e.target.value))}
+              >
+                {[0.75, 1, 1.25, 1.5].map((n) => (
+                  <option key={n}>{n}</option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              Repeat
+              <select
+                value={repeat}
+                onChange={(e) => setRepeat(e.target.value)}
+              >
+                <option value="off">Off</option>
+                <option value="ayah">This ayah</option>
+                <option value="range">Verse range</option>
+              </select>
+            </label>
+            {repeat === "range" && (
+              <>
+                <label className="field">
+                  From ayah
+                  <input
+                    type="number"
+                    min="1"
+                    max={end}
+                    value={start}
+                    onChange={(e) =>
+                      setStart(
+                        Math.max(1, Math.min(end, Number(e.target.value))),
+                      )
+                    }
+                  />
+                </label>
+                <label className="field">
+                  Through ayah
+                  <input
+                    type="number"
+                    min={start}
+                    max={totalAyahs}
+                    value={end}
+                    onChange={(e) =>
+                      setEnd(
+                        Math.max(
+                          start,
+                          Math.min(totalAyahs, Number(e.target.value)),
+                        ),
+                      )
+                    }
+                  />
+                </label>
+                <button
+                  className="action secondary"
+                  onClick={() => {
+                    shouldPlay.current = true;
+                    jump(start);
+                    if (currentAyah === start && audio.current) {
+                      audio.current.currentTime = 0;
+                      void audio.current
+                        .play()
+                        .catch(() => setError("Tap play to start the range."));
+                    }
+                  }}
+                >
+                  Play range
+                </button>
+              </>
+            )}
+          </div>
+        </details>
+        {error && (
+          <p role="alert" className="text-xs mt-2">
+            {error}
+          </p>
+        )}
+      </div>
+    </aside>
   );
 }

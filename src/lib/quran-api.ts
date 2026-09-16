@@ -1,3 +1,5 @@
+import list from "@/data/surahs.json";
+import { readLocal, writeLocal } from "./storage";
 export interface Surah {
   number: number;
   name: string;
@@ -6,80 +8,68 @@ export interface Surah {
   numberOfAyahs: number;
   revelationType: string;
 }
-
 export interface Ayah {
   number: number;
   numberInSurah: number;
   text: string;
   transliteration: string;
   translation: string;
+  sahih: string;
 }
-
-let surahCache: Surah[] | null = null;
-
-export async function fetchSurahs(): Promise<Surah[]> {
-  if (surahCache) return surahCache;
-  const res = await fetch("https://api.alquran.cloud/v1/surah");
-  const data = await res.json();
-  surahCache = data.data;
-  return surahCache!;
+export interface SurahData {
+  surah: Surah;
+  ayahs: Ayah[];
 }
-
-export async function fetchSurah(number: number): Promise<{ surah: Surah; ayahs: Ayah[] }> {
-  const [arabicRes, englishRes, translitRes] = await Promise.all([
-    fetch(`https://api.alquran.cloud/v1/surah/${number}`),
-    fetch(`https://api.alquran.cloud/v1/surah/${number}/en.asad`),
-    fetch(`https://api.alquran.cloud/v1/surah/${number}/en.transliteration`),
-  ]);
-  const arabicData = await arabicRes.json();
-  const englishData = await englishRes.json();
-  const translitData = await translitRes.json();
-
-  const surah: Surah = {
-    number: arabicData.data.number,
-    name: arabicData.data.name,
-    englishName: arabicData.data.englishName,
-    englishNameTranslation: arabicData.data.englishNameTranslation,
-    numberOfAyahs: arabicData.data.numberOfAyahs,
-    revelationType: arabicData.data.revelationType,
-  };
-
-  const ayahs: Ayah[] = arabicData.data.ayahs.map((a: any, i: number) => ({
-    number: a.number,
-    numberInSurah: a.numberInSurah,
-    text: a.text,
-    transliteration: translitData.data.ayahs[i]?.text || "",
-    translation: englishData.data.ayahs[i]?.text || "",
-  }));
-
-  return { surah, ayahs };
+export const SURAHS: Surah[] = list;
+const chapters = import.meta.glob<{ default: SurahData }>(
+  "../data/quran/*.json",
+);
+export async function fetchSurahs() {
+  return SURAHS;
 }
-
+export async function fetchSurah(number: number): Promise<SurahData> {
+  if (!Number.isInteger(number) || number < 1 || number > 114)
+    throw Error("Surah not found");
+  const load = chapters["../data/quran/" + number + ".json"];
+  if (!load) throw Error("Surah is unavailable");
+  return (await load()).default;
+}
 export function getBookmarks(): number[] {
-  try {
-    return JSON.parse(localStorage.getItem("deenflow-bookmarks") || "[]");
-  } catch {
-    return [];
-  }
+  const b = readLocal<unknown>("deenflow-bookmarks", []);
+  return Array.isArray(b)
+    ? b.filter((n) => Number.isInteger(n) && n >= 1 && n <= 6236)
+    : [];
 }
-
-export function toggleBookmark(ayahNumber: number): number[] {
-  const bookmarks = getBookmarks();
-  const idx = bookmarks.indexOf(ayahNumber);
-  if (idx >= 0) bookmarks.splice(idx, 1);
-  else bookmarks.push(ayahNumber);
-  localStorage.setItem("deenflow-bookmarks", JSON.stringify(bookmarks));
-  return bookmarks;
+export function toggleBookmark(n: number) {
+  const b = getBookmarks();
+  const next = b.includes(n) ? b.filter((a) => a !== n) : [...b, n];
+  writeLocal("deenflow-bookmarks", next);
+  return next;
 }
-
 export function getLastRead(): { surah: number; ayah: number } | null {
-  try {
-    return JSON.parse(localStorage.getItem("deenflow-lastread") || "null");
-  } catch {
-    return null;
-  }
+  const v = readLocal<{ surah: number; ayah: number } | null>(
+    "deenflow-lastread",
+    null,
+  );
+  return v &&
+    Number.isInteger(v.surah) &&
+    Number.isInteger(v.ayah) &&
+    v.surah >= 1 &&
+    v.surah <= 114 &&
+    v.ayah >= 1 &&
+    v.ayah <= SURAHS[v.surah - 1].numberOfAyahs
+    ? v
+    : null;
 }
-
 export function setLastRead(surah: number, ayah: number) {
-  localStorage.setItem("deenflow-lastread", JSON.stringify({ surah, ayah }));
+  writeLocal("deenflow-lastread", { surah, ayah });
+}
+export function verseLocation(global: number) {
+  let offset = 0;
+  for (const s of SURAHS) {
+    if (global <= offset + s.numberOfAyahs)
+      return { surah: s, ayah: global - offset };
+    offset += s.numberOfAyahs;
+  }
+  return null;
 }
