@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import type { DotLottie } from "@lottiefiles/dotlottie-web";
 
 export function AppLoader({ onComplete }: { onComplete: () => void }) {
   const [isClosing, setIsClosing] = useState(false);
-  const dotLottieRef = useRef<{
-    addEventListener?: (event: string, handler: () => void) => void;
-    removeEventListener?: (event: string, handler: () => void) => void;
-  } | null>(null);
+  const dotLottieRef = useRef<DotLottie | null>(null);
 
   useEffect(() => {
     const animation = dotLottieRef.current;
@@ -17,10 +15,10 @@ export function AppLoader({ onComplete }: { onComplete: () => void }) {
       window.setTimeout(() => onComplete(), 420);
     };
 
-    animation.addEventListener?.("complete", handleComplete);
+    animation.addEventListener?.("complete" as any, handleComplete as any);
 
     return () => {
-      animation.removeEventListener?.("complete", handleComplete);
+      animation.removeEventListener?.("complete" as any, handleComplete as any);
     };
   }, [onComplete]);
 
