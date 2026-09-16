@@ -12,6 +12,7 @@ import CountdownTimer from "@/components/CountdownTimer";
 import { PrayerSkeleton, CountdownSkeleton } from "@/components/SkeletonLoader";
 import AppHeader from "@/components/AppHeader";
 import { DUAS } from "@/lib/duas-data";
+import { usePrayerNotifications } from "@/hooks/use-prayer-notifications";
 
 export const Route = createFileRoute("/")({
   head: () => ({
